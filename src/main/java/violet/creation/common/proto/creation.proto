@@ -1,0 +1,108 @@
+syntax = "proto3";
+package creation;
+option java_multiple_files = true;
+option java_package = "violet.creation.common.proto_gen.creation";
+option go_package = "/proto_gen/creation";
+
+import "proto/common.proto";
+
+enum CreationType{
+  CreationType_Not_Use = 0;
+  Text2Image = 1;
+  Image2Image = 2;
+  Text2Video = 3;
+  Image2Video = 4;
+}
+
+message Creation{
+  int64 creation_id = 1;
+  int32 creation_type = 2;
+  int64 user_id = 3;
+  string prompt = 4;
+  string src_media_url = 5;
+  string title = 6;
+  string content = 7;
+  string media_url = 8;
+  string category = 9;
+  int64 create_time = 10;
+  int64 modify_time = 11;
+  int32 status = 12;
+  string extra = 13;
+}
+
+message CreateCreationRequest{
+  int32 create_type = 1;
+  int64 user_id = 2;
+  string prompt = 3;
+  string src_media_url = 4;
+}
+message CreateCreationResponse{
+  int32 creation_id = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message PublishCreationRequest{
+  int64 creation_id = 1;
+  int64 user_id = 2;
+  string title = 3;
+  string content = 4;
+  string category = 5;
+}
+message PublishCreationResponse{
+  common.BaseResp baseResp = 255;
+}
+
+message DeleteCreationRequest{
+  int64 creation_id = 1;
+  int64 user_id = 2;
+}
+message DeleteCreationResponse{
+  common.BaseResp baseResp = 255;
+}
+
+message GetCreationByIdRequest{
+  int64 creation_id = 1;
+}
+message GetCreationByIdResponse{
+  Creation creation = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message GetCreationsByUserRequest{
+  int64 user_id = 1;
+  int32 page = 2;
+  int32 status = 3;
+}
+message GetCreationsByUserResponse{
+  repeated Creation creations = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message GetCreationsByRecRequest{
+  int64 user_id = 1;
+  int32 page = 2;
+}
+message GetCreationsByRecResponse{
+  repeated Creation creations = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message GetCreationsBySearchRequest{
+  string keyword = 1;
+  int32 page = 2;
+  int32 sort_type = 3;
+}
+message GetCreationsBySearchResponse{
+  repeated Creation creations = 1;
+  common.BaseResp baseResp = 255;
+}
+
+service CreationService {
+  rpc CreateCreation(CreateCreationRequest)returns(CreateCreationResponse){}
+  rpc PublishCreation(PublishCreationRequest)returns(PublishCreationResponse){}
+  rpc DeleteCreation(DeleteCreationRequest)returns(DeleteCreationResponse){}
+  rpc GetCreationById(GetCreationByIdRequest)returns(GetCreationByIdResponse){}
+  rpc GetCreationsByUser(GetCreationsByUserRequest)returns(GetCreationsByUserResponse){}
+  rpc GetCreationsByRec(GetCreationsByRecRequest)returns(GetCreationsByRecResponse){}
+  rpc GetCreationsBySearch(GetCreationsBySearchRequest)returns(GetCreationsBySearchResponse){}
+}
