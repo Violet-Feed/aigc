@@ -12,12 +12,27 @@ public class CreationServiceImpl implements CreationService {
     }
 
     @Override
-    public PublishCreationResponse publishCreation(PublishCreationRequest req) {
+    public DeleteCreationResponse deleteCreation(DeleteCreationRequest req) {
         return null;
     }
 
     @Override
     public GetCreationByIdResponse getCreationById(GetCreationByIdRequest req) {
+        return null;
+    }
+
+    @Override
+    public GetCreationsByUserResponse getCreationsByUser(GetCreationsByUserRequest req) {
+        return null;
+    }
+
+    @Override
+    public GetCreationsByRecResponse getCreationsByRec(GetCreationsByRecRequest req) {
+        return null;
+    }
+
+    @Override
+    public GetCreationsBySearchResponse getCreationsBySearch(GetCreationsBySearchRequest req) {
         return null;
     }
 }

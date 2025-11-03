@@ -18,3 +18,12 @@ spring:
     password: root
   elasticsearch:
     uris: localhost:9200
+aliyun:
+  oss:
+    endpoint: https://oss-cn-beijing.aliyuncs.com
+    region: cn-beijing
+    bucket-name: violet-feed
+    access-key-id: 111
+    access-key-secret: 111
+minimax:
+  api-key: 111
