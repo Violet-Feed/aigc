@@ -1,7 +1,25 @@
 package violet.creation.common.mapper;
 
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+import violet.creation.common.pojo.Creation;
+
+import java.util.List;
 
 @Mapper
 public interface CreationMapper {
+    @Insert("INSERT INTO creation VALUES (null,#{creationId},#{userId},#{materialId},#{materialType},#{materialUrl},#{title},#{content},#{category},#{createTime},#{modifyTime},#{status},#{extra})" )
+    Boolean insertCreation(Creation creation);
+
+    @Select("SELECT * FROM creation WHERE creation_id = #{creationId}" )
+    Creation selectByCreationId(Long creationId);
+
+    @Select("<script>" +
+            "SELECT * FROM creation WHERE creation_id IN " +
+            "<foreach item='item' index='index' collection='creationIds' open='(' separator=',' close=')'>" +
+            "#{item}" +
+            "</foreach>" +
+            "</script>" )
+    List<Creation> selectByCreationIds(List<Long> creationIds);
 }

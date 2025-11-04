@@ -31,10 +31,10 @@ public class SnowFlake {
 
     public SnowFlake(long datacenterId, long machineId) {
         if (datacenterId > MAX_DATACENTER_NUM || datacenterId < 0) {
-            throw new IllegalArgumentException("datacenterId can't be greater than MAX_DATACENTER_NUM or less than 0");
+            throw new IllegalArgumentException("datacenterId can't be greater than MAX_DATACENTER_NUM or less than 0" );
         }
         if (machineId > MAX_MACHINE_NUM || machineId < 0) {
-            throw new IllegalArgumentException("machineId can't be greater than MAX_MACHINE_NUM or less than 0");
+            throw new IllegalArgumentException("machineId can't be greater than MAX_MACHINE_NUM or less than 0" );
         }
         this.datacenterId = datacenterId;
         this.machineId = machineId;
@@ -44,7 +44,7 @@ public class SnowFlake {
         //TODO:锁
         long currStmp = getNewstmp();
         if (currStmp < lastStmp) {
-            throw new RuntimeException("Clock moved backwards.  Refusing to generate id");
+            throw new RuntimeException("Clock moved backwards.  Refusing to generate id" );
         }
         if (currStmp == lastStmp) {
             //相同毫秒内，序列号自增

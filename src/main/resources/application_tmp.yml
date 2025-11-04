@@ -10,12 +10,12 @@ spring:
     neo4j:
       uri: bolt://localhost:7687
       username: neo4j
-      password: password
+      password: xxx
   datasource:
     url: jdbc:mysql://localhost:3306/violet?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: root
+    password: xxx
   elasticsearch:
     uris: localhost:9200
 aliyun:
@@ -23,7 +23,7 @@ aliyun:
     endpoint: https://oss-cn-beijing.aliyuncs.com
     region: cn-beijing
     bucket-name: violet-feed
-    access-key-id: 111
-    access-key-secret: 111
+    access-key-id: xxx
+    access-key-secret: xxx
 minimax:
-  api-key: 111
+  api-key: xxx
