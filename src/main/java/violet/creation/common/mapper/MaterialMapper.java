@@ -16,6 +16,9 @@ public interface MaterialMapper {
     @Update("UPDATE material SET material_url = #{materialUrl}, status = #{status} WHERE material_id = #{materialId}" )
     Boolean updateMaterialAfterUpload(Material material);
 
-    @Select("SELECT * FROM material WHERE user_id = #{userId}" )
-    List<Material> selectByUserId(Long userId);
+    @Update("UPDATE material SET status = 4 WHERE material_id = #{materialId}" )
+    Boolean deleteMaterial(Long materialId);
+
+    @Select("SELECT * FROM material WHERE user_id = #{userId} AND status != 4 LIMIT #{size} OFFSET #{offset}" )
+    List<Material> selectByUserId(Long userId, Integer offset, Integer size);
 }

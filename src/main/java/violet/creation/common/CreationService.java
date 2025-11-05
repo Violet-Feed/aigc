@@ -24,6 +24,16 @@ public class CreationService extends CreationServiceGrpc.CreationServiceImplBase
     }
 
     @Override
+    public void videoMaterialCallback(VideoMaterialCallbackRequest request, StreamObserver<VideoMaterialCallbackResponse> responseObserver) {
+        try {
+            responseObserver.onNext(materialService.videoMaterialCallback(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
     public void deleteMaterial(DeleteMaterialRequest request, StreamObserver<DeleteMaterialResponse> responseObserver) {
         try {
             responseObserver.onNext(materialService.deleteMaterial(request));

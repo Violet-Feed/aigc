@@ -12,6 +12,9 @@ public interface CreationMapper {
     @Insert("INSERT INTO creation VALUES (null,#{creationId},#{userId},#{materialId},#{materialType},#{materialUrl},#{title},#{content},#{category},#{createTime},#{modifyTime},#{status},#{extra})" )
     Boolean insertCreation(Creation creation);
 
+    @Select("UPDATE creation SET status = 4 WHERE creation_id = #{creationId}" )
+    Boolean deleteCreation(Long creationId);
+
     @Select("SELECT * FROM creation WHERE creation_id = #{creationId}" )
     Creation selectByCreationId(Long creationId);
 

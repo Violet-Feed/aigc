@@ -37,12 +37,27 @@ public class CreationServiceImpl implements CreationService {
 
     @Override
     public DeleteCreationResponse deleteCreation(DeleteCreationRequest req) {
-        return null;
+        DeleteCreationResponse.Builder resp = DeleteCreationResponse.newBuilder();
+        if (!creationMapper.deleteCreation(req.getCreationId())) {
+            log.error("作品删除失败，作品ID：{}", req.getCreationId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+        return resp.setBaseResp(baseResp).build();
     }
 
     @Override
     public GetCreationByIdResponse getCreationById(GetCreationByIdRequest req) {
-        return null;
+        GetCreationByIdResponse.Builder resp = GetCreationByIdResponse.newBuilder();
+        Creation creation = creationMapper.selectByCreationId(req.getCreationId());
+        if (creation == null) {
+            log.error("作品不存在，作品ID：{}", req.getCreationId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+        return resp.setBaseResp(baseResp).build();
     }
 
     @Override

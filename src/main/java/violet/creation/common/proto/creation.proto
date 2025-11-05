@@ -59,6 +59,17 @@ message CreateMaterialResponse{
   common.BaseResp baseResp = 255;
 }
 
+message VideoMaterialCallbackRequest{
+  string task_id = 1;
+  string status = 2;
+  string file_id = 3;
+  int32 status_code = 4;
+  string status_msg = 5;
+}
+message VideoMaterialCallbackResponse{
+  common.BaseResp baseResp = 255;
+}
+
 message DeleteMaterialRequest{
   int64 material_id = 1;
   int64 user_id = 2;
@@ -136,6 +147,7 @@ message GetCreationsBySearchResponse{
 service CreationService {
   rpc CreateMaterial(CreateMaterialRequest)returns(CreateMaterialResponse){}
   rpc DeleteMaterial(DeleteMaterialRequest)returns(DeleteMaterialResponse){}
+  rpc VideoMaterialCallback(VideoMaterialCallbackRequest)returns(VideoMaterialCallbackResponse){}
   rpc GetMaterialByUser(GetMaterialByUserRequest)returns(GetMaterialByUserResponse){}
   rpc CreateCreation(CreateCreationRequest)returns(CreateCreationResponse){}
   rpc DeleteCreation(DeleteCreationRequest)returns(DeleteCreationResponse){}
