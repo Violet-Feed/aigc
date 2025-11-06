@@ -1,6 +1,6 @@
 README.md
 target/
-src/main/java/violet/creation/common/proto_gen/
+src/main/java/violet/aigc/common/proto_gen/
 src/main/resources/application.yml
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/

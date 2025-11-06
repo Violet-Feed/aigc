@@ -1,17 +1,18 @@
-package violet.creation.common;
+package violet.aigc.common;
 
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
-import violet.creation.common.proto_gen.creation.*;
-import violet.creation.common.service.MaterialService;
+import violet.aigc.common.proto_gen.aigc.*;
+import violet.aigc.common.service.CreationService;
+import violet.aigc.common.service.MaterialService;
 
 @GrpcService
-public class CreationService extends CreationServiceGrpc.CreationServiceImplBase {
+public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
     @Autowired
     private MaterialService materialService;
     @Autowired
-    private violet.creation.common.service.CreationService creationService;
+    private CreationService creationService;
 
     @Override
     public void createMaterial(CreateMaterialRequest request, StreamObserver<CreateMaterialResponse> responseObserver) {

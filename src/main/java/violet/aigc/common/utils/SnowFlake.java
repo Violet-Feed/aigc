@@ -1,4 +1,4 @@
-package violet.creation.common.utils;
+package violet.aigc.common.utils;
 
 public class SnowFlake {
     /**

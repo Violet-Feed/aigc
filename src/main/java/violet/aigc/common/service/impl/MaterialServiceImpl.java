@@ -1,8 +1,7 @@
-package violet.creation.common.service.impl;
+package violet.aigc.common.service.impl;
 
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.fasterxml.jackson.databind.ser.Serializers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,14 +10,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import violet.creation.common.mapper.MaterialMapper;
-import violet.creation.common.pojo.Material;
-import violet.creation.common.proto_gen.common.BaseResp;
-import violet.creation.common.proto_gen.common.StatusCode;
-import violet.creation.common.proto_gen.creation.*;
-import violet.creation.common.service.MaterialService;
-import violet.creation.common.utils.OSSUtil;
-import violet.creation.common.utils.SnowFlake;
+import violet.aigc.common.mapper.MaterialMapper;
+import violet.aigc.common.pojo.Material;
+import violet.aigc.common.proto_gen.aigc.*;
+import violet.aigc.common.proto_gen.common.BaseResp;
+import violet.aigc.common.proto_gen.common.StatusCode;
+import violet.aigc.common.service.MaterialService;
+import violet.aigc.common.utils.OSSUtil;
+import violet.aigc.common.utils.SnowFlake;
 
 import javax.annotation.PostConstruct;
 import java.util.Date;
@@ -30,7 +29,7 @@ public class MaterialServiceImpl implements MaterialService {
     @Autowired
     private MaterialMapper materialMapper;
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
     @Value("${minimax.api-key}" )
     private String apiKey;
     private WebClient webClient;
@@ -119,7 +118,7 @@ public class MaterialServiceImpl implements MaterialService {
         } else if (req.getMaterialType() == MaterialType.Video_VALUE) {
             requestJson.put("duration", 6 );
             requestJson.put("resolution", "768P" );
-            requestJson.put("callback_url", "/api/creation/video_material_callback" );
+            requestJson.put("callback_url", "/api/aigc/video_material_callback" );
             if(!req.getSourceUrl().isEmpty()) {
                 requestJson.put("resolution", "512P");
                 requestJson.put("first_frame_image", req.getSourceUrl());
@@ -144,7 +143,7 @@ public class MaterialServiceImpl implements MaterialService {
                                 log.error("响应无 task_id 字段，素材ID：{}", materialId);
                                 return;
                             }
-                            redisTemplate.opsForValue().set("video_task:" + taskId, materialId);
+                            redisTemplate.opsForValue().set("video_task:" + taskId, materialId.toString());
                         } catch (Exception e) {
                             log.error("素材处理失败，素材ID：{}", materialId, e);
                         }
@@ -161,7 +160,7 @@ public class MaterialServiceImpl implements MaterialService {
     @Override
     public VideoMaterialCallbackResponse videoMaterialCallback(VideoMaterialCallbackRequest req) {
         VideoMaterialCallbackResponse.Builder resp = VideoMaterialCallbackResponse.newBuilder();
-        Long materialId = (Long) redisTemplate.opsForValue().get("video_task:" + req.getTaskId());
+        Long materialId = Long.valueOf(redisTemplate.opsForValue().get("video_task:" + req.getTaskId()));
         if (materialId == null) {
             log.error("未找到对应的素材ID，任务ID：{}", req.getTaskId());
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).setStatusMessage("未找到对应的素材ID").build();

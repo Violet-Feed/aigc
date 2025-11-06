@@ -1,8 +1,8 @@
 syntax = "proto3";
 package creation;
 option java_multiple_files = true;
-option java_package = "violet.creation.common.proto_gen.creation";
-option go_package = "/proto_gen/creation";
+option java_package = "violet.aigc.common.proto_gen.aigc";
+option go_package = "/proto_gen/aigc";
 
 import "proto/common.proto";
 
@@ -144,7 +144,7 @@ message GetCreationsBySearchResponse{
   common.BaseResp baseResp = 255;
 }
 
-service CreationService {
+service AigcService {
   rpc CreateMaterial(CreateMaterialRequest)returns(CreateMaterialResponse){}
   rpc DeleteMaterial(DeleteMaterialRequest)returns(DeleteMaterialResponse){}
   rpc VideoMaterialCallback(VideoMaterialCallbackRequest)returns(VideoMaterialCallbackResponse){}

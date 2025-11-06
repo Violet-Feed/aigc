@@ -1,15 +1,15 @@
-package violet.creation.common.service.impl;
+package violet.aigc.common.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import violet.creation.common.mapper.CreationMapper;
-import violet.creation.common.pojo.Creation;
-import violet.creation.common.proto_gen.common.BaseResp;
-import violet.creation.common.proto_gen.common.StatusCode;
-import violet.creation.common.proto_gen.creation.*;
-import violet.creation.common.service.CreationService;
-import violet.creation.common.utils.SnowFlake;
+import violet.aigc.common.mapper.CreationMapper;
+import violet.aigc.common.pojo.Creation;
+import violet.aigc.common.proto_gen.aigc.*;
+import violet.aigc.common.proto_gen.common.BaseResp;
+import violet.aigc.common.proto_gen.common.StatusCode;
+import violet.aigc.common.service.CreationService;
+import violet.aigc.common.utils.SnowFlake;
 
 import java.util.Date;
 

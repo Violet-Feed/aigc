@@ -1,6 +1,6 @@
-package violet.creation.common.service;
+package violet.aigc.common.service;
 
-import violet.creation.common.proto_gen.creation.*;
+import violet.aigc.common.proto_gen.aigc.*;
 
 public interface MaterialService {
     CreateMaterialResponse createMaterial(CreateMaterialRequest req);

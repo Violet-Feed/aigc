@@ -1,4 +1,4 @@
-package violet.creation.common.utils;
+package violet.aigc.common.utils;
 
 import com.aliyun.oss.*;
 import com.aliyun.oss.common.auth.DefaultCredentialProvider;

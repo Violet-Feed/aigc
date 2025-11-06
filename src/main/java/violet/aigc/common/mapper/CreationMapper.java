@@ -1,9 +1,9 @@
-package violet.creation.common.mapper;
+package violet.aigc.common.mapper;
 
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
-import violet.creation.common.pojo.Creation;
+import violet.aigc.common.pojo.Creation;
 
 import java.util.List;
 

@@ -1,13 +1,13 @@
-package violet.creation.common;
+package violet.aigc.common;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CreationApplication {
+public class AigcApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CreationApplication.class, args);
+        SpringApplication.run(AigcApplication.class, args);
     }
 
 }

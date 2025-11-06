@@ -1,4 +1,4 @@
-package violet.creation.common.pojo;
+package violet.aigc.common.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
