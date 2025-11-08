@@ -25,5 +25,7 @@ aliyun:
     bucket-name: violet-feed
     access-key-id: xxx
     access-key-secret: xxx
+  dashscope:
+    api-key: xxx
 minimax:
   api-key: xxx
