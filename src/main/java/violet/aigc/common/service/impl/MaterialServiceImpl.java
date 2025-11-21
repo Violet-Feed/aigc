@@ -30,7 +30,7 @@ public class MaterialServiceImpl implements MaterialService {
     private MaterialMapper materialMapper;
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
-    @Value("${minimax.api-key}" )
+    @Value("${minimax.api-key}")
     private String apiKey;
     private WebClient webClient;
     private final SnowFlake materialIdGenerator = new SnowFlake(0, 0);
@@ -50,7 +50,7 @@ public class MaterialServiceImpl implements MaterialService {
         CreateMaterialResponse.Builder resp = CreateMaterialResponse.newBuilder();
         Long materialId = materialIdGenerator.nextId();
         String model = req.getMaterialType() == MaterialType.Image_VALUE ? "image-01" : "MiniMax-Hailuo-02";
-        Material material = new Material(null, materialId, req.getMaterialType(), req.getUserId(), req.getPrompt(), req.getSourceUrl(), "", model, new Date(), MaterialStatus.Generating_VALUE, "" );
+        Material material = new Material(null, materialId, req.getMaterialType(), req.getUserId(), req.getPrompt(), req.getSourceUrl(), "", model, new Date(), MaterialStatus.Generating_VALUE, "");
         if (!materialMapper.insertMaterial(material)) {
             log.error("素材入库失败，素材ID：{}", materialId);
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
@@ -61,8 +61,8 @@ public class MaterialServiceImpl implements MaterialService {
         requestJson.put("prompt", req.getPrompt());
         requestJson.put("prompt_optimizer", true);
         if (req.getMaterialType() == MaterialType.Image_VALUE) {
-            requestJson.put("response_format", "url" );
-            requestJson.put("n",1);
+            requestJson.put("response_format", "url");
+            requestJson.put("n", 1);
             if (!req.getSourceUrl().isEmpty()) {
                 JSONArray subjectReference = new JSONArray();
                 JSONObject referenceObj = new JSONObject();
@@ -72,7 +72,7 @@ public class MaterialServiceImpl implements MaterialService {
                 requestJson.put("subject_reference", subjectReference);
             }
             webClient.post()
-                    .uri("https://api.minimaxi.com/v1/image_generation" )
+                    .uri("https://api.minimaxi.com/v1/image_generation")
                     .bodyValue(requestJson)
                     .retrieve()
                     .bodyToMono(String.class)
@@ -80,24 +80,24 @@ public class MaterialServiceImpl implements MaterialService {
                         try {
                             log.info("图片生成接口响应，素材ID：{}，响应内容：{}", materialId, jsonStr);
                             JSONObject responseJson = JSONObject.parseObject(jsonStr);
-                            JSONObject baseResp = responseJson.getJSONObject("base_resp" );
-                            if (baseResp == null || baseResp.getInteger("status_code" ) != 0) {
-                                String errMsg = baseResp != null ? baseResp.getString("status_msg" ) : "未知错误";
+                            JSONObject baseResp = responseJson.getJSONObject("base_resp");
+                            if (baseResp == null || baseResp.getInteger("status_code") != 0) {
+                                String errMsg = baseResp != null ? baseResp.getString("status_msg") : "未知错误";
                                 log.error("图片生成失败，素材ID：{}，错误信息：{}", materialId, errMsg);
                                 return;
                             }
-                            JSONObject data = responseJson.getJSONObject("data" );
+                            JSONObject data = responseJson.getJSONObject("data");
                             if (data == null) {
                                 log.error("响应无 data 字段，素材ID：{}", materialId);
                                 return;
                             }
-                            List<String> imageUrls = data.getJSONArray("image_urls" ).toJavaList(String.class);
+                            List<String> imageUrls = data.getJSONArray("image_urls").toJavaList(String.class);
                             if (imageUrls == null || imageUrls.isEmpty()) {
                                 log.error("无图片 URL 返回，素材ID：{}", materialId);
                                 return;
                             }
                             String tempImageUrl = imageUrls.get(0);
-                            String ossPath = String.format(OSS_PATH, materialId, "png" );
+                            String ossPath = String.format(OSS_PATH, materialId, "png");
                             String ossAccessUrl = OSSUtil.upload(tempImageUrl, ossPath);
                             log.info("素材创建成功，素材ID：{}，OSS访问URL：{}", materialId, ossAccessUrl);
                             material.setMaterialUrl(ossAccessUrl);
@@ -116,15 +116,15 @@ public class MaterialServiceImpl implements MaterialService {
                     })
                     .subscribe();
         } else if (req.getMaterialType() == MaterialType.Video_VALUE) {
-            requestJson.put("duration", 6 );
-            requestJson.put("resolution", "768P" );
-            requestJson.put("callback_url", "/api/aigc/video_material_callback" );
-            if(!req.getSourceUrl().isEmpty()) {
+            requestJson.put("duration", 6);
+            requestJson.put("resolution", "768P");
+            requestJson.put("callback_url", "/api/aigc/video_material_callback");
+            if (!req.getSourceUrl().isEmpty()) {
                 requestJson.put("resolution", "512P");
                 requestJson.put("first_frame_image", req.getSourceUrl());
             }
             webClient.post()
-                    .uri("https://api.minimaxi.com/v1/video_generation" )
+                    .uri("https://api.minimaxi.com/v1/video_generation")
                     .bodyValue(requestJson)
                     .retrieve()
                     .bodyToMono(String.class)
@@ -132,13 +132,13 @@ public class MaterialServiceImpl implements MaterialService {
                         try {
                             log.info("视频生成接口响应，素材ID：{}，响应内容：{}", materialId, jsonStr);
                             JSONObject responseJson = JSONObject.parseObject(jsonStr);
-                            JSONObject baseResp = responseJson.getJSONObject("base_resp" );
-                            if (baseResp == null || baseResp.getInteger("status_code" ) != 0) {
-                                String errMsg = baseResp != null ? baseResp.getString("status_msg" ) : "未知错误";
+                            JSONObject baseResp = responseJson.getJSONObject("base_resp");
+                            if (baseResp == null || baseResp.getInteger("status_code") != 0) {
+                                String errMsg = baseResp != null ? baseResp.getString("status_msg") : "未知错误";
                                 log.error("视频生成失败，素材ID：{}，错误信息：{}", materialId, errMsg);
                                 return;
                             }
-                            String taskId = responseJson.getString("task_id" );
+                            String taskId = responseJson.getString("task_id");
                             if (taskId == null) {
                                 log.error("响应无 task_id 字段，素材ID：{}", materialId);
                                 return;
@@ -166,7 +166,7 @@ public class MaterialServiceImpl implements MaterialService {
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).setStatusMessage("未找到对应的素材ID").build();
             return resp.setBaseResp(baseResp).build();
         }
-        if (req.getStatusCode()!=0||"Fail".equals(req.getStatus())) {
+        if (req.getStatusCode() != 0 || "Fail".equals(req.getStatus())) {
             log.error("视频生成失败，素材ID：{}，错误信息：{}", materialId, req.getStatusMsg());
             Material material = new Material();
             material.setMaterialId(materialId);
@@ -214,7 +214,7 @@ public class MaterialServiceImpl implements MaterialService {
                 throw new RuntimeException("素材状态更新失败");
             }
             // todo: 发送消息通知用户素材生成成功（同步场景下可直接调用）
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("素材处理失败，素材ID：{}", materialId, e);
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).setStatusMessage("素材处理失败：" + e.getMessage()).build();
             return resp.setBaseResp(baseResp).build();
@@ -227,7 +227,7 @@ public class MaterialServiceImpl implements MaterialService {
     @Override
     public DeleteMaterialResponse deleteMaterial(DeleteMaterialRequest req) {
         DeleteMaterialResponse.Builder resp = DeleteMaterialResponse.newBuilder();
-        if(!materialMapper.deleteMaterial(req.getMaterialId())) {
+        if (!materialMapper.deleteMaterial(req.getMaterialId())) {
             log.error("素材删除失败，素材ID：{}", req.getMaterialId());
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
             return resp.setBaseResp(baseResp).build();

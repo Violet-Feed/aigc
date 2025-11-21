@@ -1,13 +1,14 @@
 package violet.aigc.common.config;
 
 import com.vesoft.nebula.client.graph.NebulaPoolConfig;
-import com.vesoft.nebula.client.graph.SessionPool;
-import com.vesoft.nebula.client.graph.SessionPoolConfig;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
+import com.vesoft.nebula.client.graph.net.Session;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 
 import java.net.UnknownHostException;
 import java.util.Collections;
@@ -46,18 +47,12 @@ public class NebulaConfig {
     }
 
     @Bean
-    public SessionPool sessionPool() throws Exception {
-        SessionPoolConfig config = new SessionPoolConfig(
-                Collections.singletonList(new HostAddress(address, port)),
-                "your_space",
-                username,
-                password
-        );
-        config.setMaxSessionSize(50);
-        config.setMinSessionSize(5);
-        config.setWaitTime(5000);
-        config.setRetryTimes(3);
-        config.setIntervalTime(1000);
-        return new SessionPool(config);
+    @Scope(scopeName = "prototype", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    public Session session(NebulaPool nebulaPool) {
+        try {
+            return nebulaPool.getSession(username, password, false);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

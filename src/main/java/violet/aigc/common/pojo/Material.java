@@ -19,7 +19,7 @@ public class Material {
     private String sourceUrl;
     private String materialUrl;
     private String model;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai" )
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date createTime;
     private Integer status;
     private String extra;
