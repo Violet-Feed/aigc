@@ -5,11 +5,8 @@ import com.vesoft.nebula.client.graph.net.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import violet.aigc.common.pojo.RecallResult;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -22,9 +19,9 @@ public class SwingRecall implements CommonRecall {
     private static final int RECALL_SIZE = 100;
 
     @Override
-    public List<RecallResult> recall(List<Long> triggers) {
+    public Set<Long> recall(Set<Long> triggerIds) {
         List<String> queries = new ArrayList<>();
-        for (Long triggerId : triggers) {
+        for (Long triggerId : triggerIds) {
             String subQuery = String.format(
                     "(MATCH (source:item)-[r:similar]->(target:item) " +
                             "WHERE id(source) == '%d' " +
@@ -44,23 +41,21 @@ public class SwingRecall implements CommonRecall {
             ResultSet resultSet = session.execute(nGQL);
             if (!resultSet.isSucceeded()) {
                 log.error("swing recall failed: {}", resultSet.getErrorMessage());
-                return Collections.emptyList();
+                return Collections.emptySet();
             }
             return parseRecallResult(resultSet);
         } catch (Exception e) {
             log.error("swing recall failed", e);
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
     }
 
-    private List<RecallResult> parseRecallResult(ResultSet resultSet) {
-        List<RecallResult> recallResults = new ArrayList<>();
+    private Set<Long> parseRecallResult(ResultSet resultSet) {
+        Set<Long> recallResults = new HashSet<>();
         for (int i = 0; i < resultSet.rowsSize(); i++) {
             ResultSet.Record record = resultSet.rowValues(i);
-            Long triggerId = record.get("triggerId").asLong();
             Long id = record.get("id").asLong();
-            Double score = record.get("score ").asDouble();
-            recallResults.add(new RecallResult(triggerId, id, score));
+            recallResults.add(id);
         }
         return recallResults;
     }

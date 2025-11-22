@@ -23,4 +23,19 @@ public class Material {
     private Date createTime;
     private Integer status;
     private String extra;
+
+    public violet.aigc.common.proto_gen.aigc.Material toProto() {
+        return violet.aigc.common.proto_gen.aigc.Material.newBuilder()
+                .setMaterialId(this.materialId)
+                .setMaterialType(this.materialType)
+                .setUserId(this.userId)
+                .setPrompt(this.prompt)
+                .setSourceUrl(this.sourceUrl)
+                .setMaterialUrl(this.materialUrl)
+                .setModel(this.model)
+                .setCreateTime(this.createTime.getTime())
+                .setStatus(this.status)
+                .setExtra(this.extra)
+                .build();
+    }
 }

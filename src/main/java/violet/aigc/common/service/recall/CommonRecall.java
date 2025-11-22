@@ -1,9 +1,7 @@
 package violet.aigc.common.service.recall;
 
-import violet.aigc.common.pojo.RecallResult;
-
-import java.util.List;
+import java.util.Set;
 
 public interface CommonRecall {
-    List<RecallResult> recall(List<Long> triggers);
+    Set<Long> recall(Set<Long> triggerIds);
 }

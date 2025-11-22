@@ -22,6 +22,7 @@ import violet.aigc.common.utils.SnowFlake;
 import javax.annotation.PostConstruct;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -240,7 +241,8 @@ public class MaterialServiceImpl implements MaterialService {
     public GetMaterialByUserResponse getMaterialByUser(GetMaterialByUserRequest req) {
         GetMaterialByUserResponse.Builder resp = GetMaterialByUserResponse.newBuilder();
         List<Material> materials = materialMapper.selectByUserId(req.getUserId(), (req.getPage() - 1) * PAGE_SIZE, PAGE_SIZE);
+        List<violet.aigc.common.proto_gen.aigc.Material> materialDto = materials.stream().map(Material::toProto).collect(Collectors.toList());
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
-        return resp.setBaseResp(baseResp).build();
+        return resp.setBaseResp(baseResp).addAllMaterial(materialDto).build();
     }
 }

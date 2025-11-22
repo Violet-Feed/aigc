@@ -43,7 +43,6 @@ public class QwenUtil {
     }
 
     public static List<Float> getTextEmbedding(String text) {
-        // 1. 校验参数和资源
         if (text == null || text.trim().isEmpty()) {
             throw new IllegalArgumentException("输入文本不能为空");
         }

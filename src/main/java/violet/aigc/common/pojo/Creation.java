@@ -26,4 +26,21 @@ public class Creation {
     private Date modifyTime;
     private Integer status;
     private String extra;
+
+    public violet.aigc.common.proto_gen.aigc.Creation toProto() {
+        return violet.aigc.common.proto_gen.aigc.Creation.newBuilder()
+                .setCreationId(this.creationId)
+                .setUserId(this.userId)
+                .setMaterialId(this.materialId)
+                .setMaterialType(this.materialType)
+                .setMaterialUrl(this.materialUrl)
+                .setTitle(this.title)
+                .setContent(this.content)
+                .setCategory(this.category)
+                .setCreateTime(this.createTime.getTime())
+                .setModifyTime(this.modifyTime.getTime())
+                .setStatus(this.status)
+                .setExtra(this.extra)
+                .build();
+    }
 }
