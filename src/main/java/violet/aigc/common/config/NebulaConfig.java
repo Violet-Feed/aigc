@@ -20,7 +20,7 @@ public class NebulaConfig {
     @Value("${nebula.address}")
     private String address;
 
-    @Value("${nebula.port:9669}")
+    @Value("${nebula.port}")
     private int port;
 
     @Value("${nebula.username}")

@@ -1,12 +1,14 @@
 package violet.aigc.common;
 
 import io.grpc.stub.StreamObserver;
+import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import violet.aigc.common.proto_gen.aigc.*;
 import violet.aigc.common.service.CreationService;
 import violet.aigc.common.service.MaterialService;
 
+@Slf4j
 @GrpcService
 public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
     @Autowired
@@ -60,6 +62,7 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(creationService.createCreation(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("createCreation error", e);
             responseObserver.onError(e);
         }
     }
@@ -110,6 +113,7 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(creationService.getCreationsBySearch(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("getCreationsBySearch error", e);
             responseObserver.onError(e);
         }
     }

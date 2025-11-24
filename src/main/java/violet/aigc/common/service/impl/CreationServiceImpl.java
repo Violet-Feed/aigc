@@ -51,8 +51,9 @@ public class CreationServiceImpl implements CreationService {
     private SimpleRanker simpleRanker;
 
     private final SnowFlake creationIdGenerator = new SnowFlake(0, 0);
-
     private ExecutorService asyncExecutor;
+    private static final int PAGE_SIZE = 20;
+
 
     @PostConstruct
     public void init() {
@@ -77,8 +78,13 @@ public class CreationServiceImpl implements CreationService {
     public CreateCreationResponse createCreation(CreateCreationRequest req) {
         CreateCreationResponse.Builder resp = CreateCreationResponse.newBuilder();
         Long creationId = creationIdGenerator.nextId();
+        String coverUrl = "";
+        if (req.getMaterialType() == MaterialType.Image_VALUE) {
+            coverUrl = req.getMaterialUrl();
+        }
+        //todo:获取首帧
         Date now = new Date();
-        Creation creation = new Creation(null, creationId, req.getUserId(), req.getMaterialId(), req.getMaterialType(), req.getMaterialUrl(), req.getTitle(), req.getContent(), req.getCategory(), now, now, 0, "");
+        Creation creation = new Creation(null, creationId, req.getUserId(), coverUrl, req.getMaterialId(), req.getMaterialType(), req.getMaterialUrl(), req.getTitle(), req.getContent(), req.getCategory(), now, now, 0, "");
         if (!creationMapper.insertCreation(creation)) {
             log.error("作品入库失败，作品ID：{}", creationId);
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
@@ -157,22 +163,24 @@ public class CreationServiceImpl implements CreationService {
 
     @Override
     public GetCreationsBySearchResponse getCreationsBySearch(GetCreationsBySearchRequest req) {
+        //todo:status过滤
         GetCreationsBySearchResponse.Builder resp = GetCreationsBySearchResponse.newBuilder();
+        int offset = (req.getPage() - 1) * PAGE_SIZE;
         List<Float> keywordEmbedding = QwenUtil.getTextEmbedding(req.getKeyword());
         List<BaseVector> queryEmbedding = Collections.singletonList(new FloatVec(keywordEmbedding));
         List<BaseVector> queryTexts = Collections.singletonList(new EmbeddedText(req.getKeyword()));
         List<AnnSearchReq> searchRequests = new ArrayList<>();
         searchRequests.add(AnnSearchReq.builder()
-                .vectorFieldName("title_embedding")
+                .vectorFieldName("rec_embeddings")
                 .vectors(queryEmbedding)
                 .params("{\"ef\": 10}")
-                .topK(20)
+                .topK(10)
                 .build());
         searchRequests.add(AnnSearchReq.builder()
-                .vectorFieldName("title_sparse")
+                .vectorFieldName("title_embeddings")
                 .vectors(queryTexts)
                 .params("{\"drop_ratio_search\": 0.2}")
-                .topK(20)
+                .topK(10)
                 .build());
         CreateCollectionReq.Function ranker = CreateCollectionReq.Function.builder()
                 .name("rrf")
@@ -185,12 +193,13 @@ public class CreationServiceImpl implements CreationService {
                 .searchRequests(searchRequests)
                 .ranker(ranker)
                 .topK(20)
+                .offset(offset)
                 .build();
         List<List<SearchResp.SearchResult>> searchResults = milvusClient.hybridSearch(hybridSearchReq).getSearchResults();
         List<Long> recallResults = new ArrayList<>();
         if (!searchResults.isEmpty()) {
             recallResults = searchResults.get(0).stream()
-                    .map(searchResult -> (Long) searchResult.getEntity().get("creation_id"))
+                    .map(searchResult -> (Long) searchResult.getId())
                     .collect(Collectors.toList());
         }
         List<Creation> creations = creationMapper.selectByCreationIds(recallResults);

@@ -14,6 +14,7 @@ public class Creation {
     private Long id;
     private Long creationId;
     private Long userId;
+    private String coverUrl;
     private Long materialId;
     private Integer materialType;
     private String materialUrl;
@@ -31,6 +32,7 @@ public class Creation {
         return violet.aigc.common.proto_gen.aigc.Creation.newBuilder()
                 .setCreationId(this.creationId)
                 .setUserId(this.userId)
+                .setCoverUrl(this.coverUrl)
                 .setMaterialId(this.materialId)
                 .setMaterialType(this.materialType)
                 .setMaterialUrl(this.materialUrl)

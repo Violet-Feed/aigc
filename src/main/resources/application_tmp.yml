@@ -18,6 +18,19 @@ spring:
     password: xxx
   elasticsearch:
     uris: localhost:9200
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      group-id: aigc_consumer
+      auto-offset-reset: earliest
+nebula:
+  address: localhost
+  port: 9669
+  username: nebula
+  password: xxx
+milvus:
+  uri: http://localhost:19530
+  token: root:xxx
 aliyun:
   oss:
     endpoint: https://oss-cn-beijing.aliyuncs.com

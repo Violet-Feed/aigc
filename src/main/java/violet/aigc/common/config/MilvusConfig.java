@@ -10,10 +10,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MilvusConfig {
 
-    @Value("${milvus.uri:http://localhost:19530}")
+    @Value("${milvus.uri}")
     private String milvusUri;
 
-    @Value("${milvus.token:root:Milvus}")
+    @Value("${milvus.token}")
     private String milvusToken;
 
     @Bean

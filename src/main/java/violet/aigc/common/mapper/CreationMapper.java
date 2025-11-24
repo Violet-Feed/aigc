@@ -9,7 +9,7 @@ import java.util.List;
 
 @Mapper
 public interface CreationMapper {
-    @Insert("INSERT INTO creation VALUES (null,#{creationId},#{userId},#{materialId},#{materialType},#{materialUrl},#{title},#{content},#{category},#{createTime},#{modifyTime},#{status},#{extra})")
+    @Insert("INSERT INTO creation VALUES (null,#{creationId},#{userId},#{coverUrl},#{materialId},#{materialType},#{materialUrl},#{title},#{content},#{category},#{createTime},#{modifyTime},#{status},#{extra})")
     Boolean insertCreation(Creation creation);
 
     @Select("UPDATE creation SET status = 4 WHERE creation_id = #{creationId}")
@@ -20,7 +20,7 @@ public interface CreationMapper {
 
     @Select("<script>" +
             "SELECT * FROM creation WHERE creation_id IN " +
-            "<foreach item='item' index='index' collection='creationIds' open='(' separator=',' close=')'>" +
+            "<foreach item='item' index='index' collection='list' open='(' separator=',' close=')'>" +
             "#{item}" +
             "</foreach>" +
             "</script>")
