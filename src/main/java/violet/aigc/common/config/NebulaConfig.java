@@ -5,10 +5,7 @@ import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
 import com.vesoft.nebula.client.graph.net.Session;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.context.annotation.*;
 
 import java.net.UnknownHostException;
 import java.util.Collections;
@@ -46,9 +43,22 @@ public class NebulaConfig {
         return pool;
     }
 
-    @Bean
+    @Bean("session")
+    @Primary
     @Scope(scopeName = "prototype", proxyMode = ScopedProxyMode.TARGET_CLASS)
     public Session session(NebulaPool nebulaPool) {
+        try {
+            Session session = nebulaPool.getSession(username, password, false);
+            session.execute("USE violet;");
+            return session;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Bean("swingSession")
+    @Scope(scopeName = "prototype", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    public Session swingSession(NebulaPool nebulaPool) {
         try {
             return nebulaPool.getSession(username, password, false);
         } catch (Exception e) {

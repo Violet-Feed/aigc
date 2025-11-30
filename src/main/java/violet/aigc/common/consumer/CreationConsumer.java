@@ -13,6 +13,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import violet.aigc.common.mapper.CreationGraphMapper;
 import violet.aigc.common.pojo.Creation;
 import violet.aigc.common.utils.QwenUtil;
 
@@ -24,13 +25,14 @@ import java.util.List;
 public class CreationConsumer {
     @Autowired
     private MilvusClientV2 milvusClient;
+    @Autowired
+    private CreationGraphMapper creationGraphMapper;
 
     @KafkaListener(topics = "mysql.violet.creation", groupId = "aigc_consumer")
     public void listen(ConsumerRecord<String, String> record) {
         log.info("Received message: key = {}, value = {}, partition = {}, offset = {}", record.key(), record.value(), record.partition(), record.offset());
         JSONObject json = JSON.parseObject(record.value());
         Creation creation = JSON.parseObject(json.getString("payload"), Creation.class, JSONReader.Feature.SupportSmartMatch);
-        log.info(creation.toString());
         List<Float> titleEmbedding = QwenUtil.getTextEmbedding(creation.getTitle());
         List<JsonObject> data = Collections.singletonList(new Gson().fromJson(String.format(
                 "{\"creation_id\": %d, \"rec_embeddings\": %s, \"title\": %s}",
@@ -42,5 +44,8 @@ public class CreationConsumer {
                 .build();
         InsertResp insertResp = milvusClient.insert(insertReq);
         log.info("Inserted creation_id {} into Milvus with cnt: {}", creation.getCreationId(), insertResp.getInsertCnt());
+
+        //按理应该放在另一个消费者组
+        creationGraphMapper.createCreation(creation.getUserId(), creation.getCreationId());
     }
 }

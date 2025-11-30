@@ -1,13 +1,13 @@
 package violet.aigc.common.mapper;
 
-import violet.aigc.common.pojo.Creation;
-
 import java.util.List;
 
 public interface CreationGraphMapper {
-    List<Creation> getCreationsByUser(Long userId, Integer page);
+    void createCreation(Long userId, Long creationId);
 
-    List<Creation> getCreationsByDigg(Long userId, Integer page);
+    List<Long> getCreationIdsByUser(Long userId, Integer page);
 
-    List<Creation> getCreationsByFriend(Long userId, Integer page);
+    List<Long> getCreationIdsByDigg(Long userId, Integer page);
+
+    List<Long> getCreationIdsByFriend(Long userId, Integer page);
 }

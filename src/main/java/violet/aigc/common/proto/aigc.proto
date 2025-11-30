@@ -126,6 +126,15 @@ message GetCreationsByUserResponse{
   common.BaseResp baseResp = 255;
 }
 
+message GetCreationsByFriendRequest{
+  int64 user_id = 1;
+  int32 page = 2;
+}
+message GetCreationsByFriendResponse{
+  repeated Creation creations = 1;
+  common.BaseResp baseResp = 255;
+}
+
 message GetCreationsByRecRequest{
   int64 user_id = 1;
   int32 page = 2;
@@ -154,6 +163,7 @@ service AigcService {
   rpc DeleteCreation(DeleteCreationRequest)returns(DeleteCreationResponse){}
   rpc GetCreationById(GetCreationByIdRequest)returns(GetCreationByIdResponse){}
   rpc GetCreationsByUser(GetCreationsByUserRequest)returns(GetCreationsByUserResponse){}
+  rpc GetCreationsByFriend(GetCreationsByFriendRequest)returns(GetCreationsByFriendResponse){}
   rpc GetCreationsByRec(GetCreationsByRecRequest)returns(GetCreationsByRecResponse){}
   rpc GetCreationsBySearch(GetCreationsBySearchRequest)returns(GetCreationsBySearchResponse){}
 }

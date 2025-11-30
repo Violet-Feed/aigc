@@ -1,9 +1,6 @@
 package violet.aigc.common.mapper;
 
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 import violet.aigc.common.pojo.Material;
 
 import java.util.List;
@@ -20,5 +17,5 @@ public interface MaterialMapper {
     Boolean deleteMaterial(Long materialId);
 
     @Select("SELECT * FROM material WHERE user_id = #{userId} AND status != 4 LIMIT #{size} OFFSET #{offset}")
-    List<Material> selectByUserId(Long userId, Integer offset, Integer size);
+    List<Material> selectByUserId(@Param("userId") Long userId, @Param("offset") Integer offset, @Param("size") Integer size);
 }

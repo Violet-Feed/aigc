@@ -4,6 +4,7 @@ import com.vesoft.nebula.client.graph.data.ResultSet;
 import com.vesoft.nebula.client.graph.net.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -12,6 +13,7 @@ import java.util.*;
 @Component
 public class SwingRecall implements CommonRecall {
     @Autowired
+    @Qualifier("swingSession")
     private Session session;
 
     private String space;

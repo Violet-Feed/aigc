@@ -6,31 +6,28 @@ grpc:
       address: 'static://127.0.0.1:3004'
       negotiation-type: plaintext
 spring:
-  data:
-    neo4j:
-      uri: bolt://localhost:7687
-      username: neo4j
-      password: xxx
   datasource:
     url: jdbc:mysql://localhost:3306/violet?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: xxx
-  elasticsearch:
-    uris: localhost:9200
+    password: root
   kafka:
     bootstrap-servers: localhost:9094
     consumer:
       group-id: aigc_consumer
       auto-offset-reset: earliest
+  redis:
+    host: localhost
+    port: 6666
+    password:
 nebula:
   address: localhost
   port: 9669
-  username: nebula
-  password: xxx
+  username: root
+  password: 123456
 milvus:
   uri: http://localhost:19530
-  token: root:xxx
+  token: root:Milvus
 aliyun:
   oss:
     endpoint: https://oss-cn-beijing.aliyuncs.com

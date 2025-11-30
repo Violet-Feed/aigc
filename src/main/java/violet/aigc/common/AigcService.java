@@ -22,6 +22,7 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(materialService.createMaterial(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("createMaterial error", e);
             responseObserver.onError(e);
         }
     }
@@ -32,6 +33,7 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(materialService.videoMaterialCallback(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("videoMaterialCallback error", e);
             responseObserver.onError(e);
         }
     }
@@ -42,6 +44,7 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(materialService.deleteMaterial(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("deleteMaterial error", e);
             responseObserver.onError(e);
         }
     }
@@ -52,6 +55,7 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(materialService.getMaterialByUser(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("getMaterialByUser error", e);
             responseObserver.onError(e);
         }
     }
@@ -73,6 +77,7 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(creationService.deleteCreation(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("deleteCreation error", e);
             responseObserver.onError(e);
         }
     }
@@ -83,6 +88,7 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(creationService.getCreationById(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("getCreationById error", e);
             responseObserver.onError(e);
         }
     }
@@ -93,6 +99,18 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(creationService.getCreationsByUser(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("getCreationsByUser error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void getCreationsByFriend(GetCreationsByFriendRequest request, StreamObserver<GetCreationsByFriendResponse> responseObserver) {
+        try {
+            responseObserver.onNext(creationService.getCreationsByFriend(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("getCreationsByFriend error", e);
             responseObserver.onError(e);
         }
     }
@@ -103,6 +121,7 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onNext(creationService.getCreationsByRec(request));
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error("getCreationsByRec error", e);
             responseObserver.onError(e);
         }
     }

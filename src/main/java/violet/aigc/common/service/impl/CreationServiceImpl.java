@@ -122,7 +122,26 @@ public class CreationServiceImpl implements CreationService {
     @Override
     public GetCreationsByUserResponse getCreationsByUser(GetCreationsByUserRequest req) {
         GetCreationsByUserResponse.Builder resp = GetCreationsByUserResponse.newBuilder();
-        List<Creation> creations = creationGraphMapper.getCreationsByUser(req.getUserId(), req.getPage());
+        List<Long> creationIds = creationGraphMapper.getCreationIdsByUser(req.getUserId(), req.getPage());
+        if (creationIds.isEmpty()) {
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+        return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
+    }
+
+    @Override
+    public GetCreationsByFriendResponse getCreationsByFriend(GetCreationsByFriendRequest req) {
+        GetCreationsByFriendResponse.Builder resp = GetCreationsByFriendResponse.newBuilder();
+        List<Long> creationIds = creationGraphMapper.getCreationIdsByFriend(req.getUserId(), req.getPage());
+        if (creationIds.isEmpty()) {
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
         List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
@@ -163,7 +182,7 @@ public class CreationServiceImpl implements CreationService {
 
     @Override
     public GetCreationsBySearchResponse getCreationsBySearch(GetCreationsBySearchRequest req) {
-        //todo:status过滤
+        //todo:status过滤，分页
         GetCreationsBySearchResponse.Builder resp = GetCreationsBySearchResponse.newBuilder();
         int offset = (req.getPage() - 1) * PAGE_SIZE;
         List<Float> keywordEmbedding = QwenUtil.getTextEmbedding(req.getKeyword());

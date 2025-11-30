@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import violet.aigc.common.mapper.CreationGraphMapper;
-import violet.aigc.common.pojo.Creation;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -19,112 +18,99 @@ public class CreationGraphMapperImpl implements CreationGraphMapper {
     @Autowired
     private Session session;
 
-    private String space = "violet";
-
     private static final int PAGE_SIZE = 20;
 
     @Override
-    public List<Creation> getCreationsByUser(Long userId, Integer page) {
-        int offset = (page - 1) * PAGE_SIZE;
+    public void createCreation(Long userId, Long creationId) {
+        String userVid = String.valueOf(userId);
+        String creationVid = "creation:" + creationId;
         String nGQL = String.format(
-                "USE %s;" +
-                        "MATCH (u:user)-[r:create]->(c:creation) " +
-                        "WHERE u.user_id == '%d' " +
-                        "RETURN " +
-                        "c.creation_id AS creation_id, " +
-                        "c.title AS title, " +
-                        "c.cover_url AS cover_url, " +
-                        "c.user_id AS user_id" +
-                        "r.timestamp AS timestamp " +
-                        "ORDER BY r.timestamp DESC " +
-                        "SKIP %d LIMIT %d",
-                space, userId, offset, PAGE_SIZE
+                "INSERT VERTEX IF NOT EXISTS entity (`entity_type`, `entity_id`) " +
+                        "VALUES \"%s\":(\"creation\", %d); " +
+                        "INSERT EDGE IF NOT EXISTS author (ts) " +
+                        "VALUES \"%s\"->\"%s\":(%d);",
+                creationVid, creationId,
+                userVid, creationVid, System.currentTimeMillis()
         );
         try {
             ResultSet resultSet = session.execute(nGQL);
             if (!resultSet.isSucceeded()) {
-                log.error("Query failed - space: {}, user: {}, error: {}", space, userId, resultSet.getErrorMessage());
-                throw new RuntimeException("Query failed: " + resultSet.getErrorMessage());
+                log.error("createCreation failed, userId: {}, creationId: {}, error: {}", userId, creationId, resultSet.getErrorMessage());
+                throw new RuntimeException("createCreation failed: " + resultSet.getErrorMessage());
             }
-            return parseCreations(resultSet);
-        } catch (IOErrorException | UnsupportedEncodingException e) {
-            log.error("Failed to query creations - space: {}, user: {}, page: {}", space, userId, page, e);
+        } catch (IOErrorException e) {
+            log.error("createCreation failed, userId: {}, creationId: {}", userId, creationId, e);
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<Creation> getCreationsByDigg(Long userId, Integer page) {
+    public List<Long> getCreationIdsByUser(Long userId, Integer page) {
         int offset = (page - 1) * PAGE_SIZE;
+        String userVid = String.valueOf(userId);
         String nGQL = String.format(
-                "USE %s;" +
-                        "MATCH (u:user)-[r:digg]->(c:creation) " +
-                        "WHERE u.user_id == '%d' " +
+                "MATCH (u:user)-[r:author]->(e:entity) " +
+                        "WHERE id(u) == \"%s\" AND e.entity.entity_type == \"creation\" " +
                         "RETURN " +
-                        "c.creation_id AS creation_id, " +
-                        "c.title AS title, " +
-                        "c.cover_url AS cover_url, " +
-                        "c.user_id AS user_id" +
-                        "r.timestamp AS timestamp " +
-                        "ORDER BY r.timestamp DESC " +
+                        "e.entity.entity_id AS creation_id, " +
+                        "r.ts AS ts " +
+                        "ORDER BY ts DESC " +
                         "SKIP %d LIMIT %d",
-                space, userId, offset, PAGE_SIZE
+                userVid, offset, PAGE_SIZE
         );
         try {
             ResultSet resultSet = session.execute(nGQL);
             if (!resultSet.isSucceeded()) {
-                log.error("Query digg failed - space: {}, user: {}, error: {}", space, userId, resultSet.getErrorMessage());
+                log.error("Query failed - user: {}, error: {}", userId, resultSet.getErrorMessage());
                 throw new RuntimeException("Query failed: " + resultSet.getErrorMessage());
             }
             return parseCreations(resultSet);
         } catch (IOErrorException | UnsupportedEncodingException e) {
-            log.error("Failed to query digg creations - space: {}, user: {}, page: {}", space, userId, page, e);
+            log.error("Failed to query creations - user: {}, page: {}", userId, page, e);
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public List<Creation> getCreationsByFriend(Long userId, Integer page) {
+    public List<Long> getCreationIdsByDigg(Long userId, Integer page) {
         int offset = (page - 1) * PAGE_SIZE;
+        return null;
+    }
+
+    @Override
+    public List<Long> getCreationIdsByFriend(Long userId, Integer page) {
+        int offset = (page - 1) * PAGE_SIZE;
+        String userVid = String.valueOf(userId);
         String nGQL = String.format(
-                "USE %s;" +
-                        "MATCH (u1:user)-[f1:follow]->(u2:user)-[r:create]->(c:creation) " +
-                        "WHERE u1.user_id == '%d' " +
-                        "MATCH (u2)-[f2:follow]->(u1) " +
+                "MATCH (u1:user)-[:follow]->(u2:user)-[r:author]->(e:entity) " +
+                        "WHERE id(u1) == \"%s\" AND e.entity.entity_type == \"creation\" " +
+                        "MATCH (u2)-[:follow]->(u1) " +
                         "RETURN " +
-                        "c.creation_id AS creation_id, " +
-                        "c.title AS title, " +
-                        "c.cover_url AS cover_url, " +
-                        "c.user_id AS user_id" +
-                        "r.timestamp AS timestamp, " +
-                        "ORDER BY r.timestamp DESC " +
+                        "e.entity.entity_id AS creation_id " +
+                        "r.ts AS ts " +
+                        "ORDER BY ts DESC " +
                         "SKIP %d LIMIT %d",
-                space, userId, offset, PAGE_SIZE
+                userVid, offset, PAGE_SIZE
         );
         try {
             ResultSet resultSet = session.execute(nGQL);
             if (!resultSet.isSucceeded()) {
-                log.error("Query friend creations failed - space: {}, user: {}, error: {}", space, userId, resultSet.getErrorMessage());
+                log.error("Query friend creations failed - user: {}, error: {}", userId, resultSet.getErrorMessage());
                 throw new RuntimeException("Query failed: " + resultSet.getErrorMessage());
             }
             return parseCreations(resultSet);
         } catch (IOErrorException | UnsupportedEncodingException e) {
-            log.error("Failed to query friend creations - space: {}, user: {}, page: {}", space, userId, page, e);
+            log.error("Failed to query friend creations - user: {}, page: {}", userId, page, e);
             throw new RuntimeException(e);
         }
     }
 
-    private List<Creation> parseCreations(ResultSet resultSet) throws UnsupportedEncodingException {
-        List<Creation> creations = new ArrayList<>();
+    private List<Long> parseCreations(ResultSet resultSet) throws UnsupportedEncodingException {
+        List<Long> creationIds = new ArrayList<>();
         for (int i = 0; i < resultSet.rowsSize(); i++) {
             ResultSet.Record record = resultSet.rowValues(i);
-            Creation creation = new Creation();
-            creation.setCreationId(record.get("creation_id").asLong());
-            creation.setTitle(record.get("title").asString());
-            creation.setMaterialUrl(record.get("cover_url").asString());
-            creation.setUserId(record.get("user_id").asLong());
-            creations.add(creation);
+            creationIds.add(record.get("creation_id").asLong());
         }
-        return creations;
+        return creationIds;
     }
 }
