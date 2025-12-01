@@ -105,6 +105,17 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
     }
 
     @Override
+    public void getCreationsByDigg(GetCreationsByDiggRequest request, StreamObserver<GetCreationsByDiggResponse> responseObserver) {
+        try {
+            responseObserver.onNext(creationService.getCreationsByDigg(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("getCreationsByDigg error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
     public void getCreationsByFriend(GetCreationsByFriendRequest request, StreamObserver<GetCreationsByFriendResponse> responseObserver) {
         try {
             responseObserver.onNext(creationService.getCreationsByFriend(request));

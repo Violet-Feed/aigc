@@ -1,0 +1,246 @@
+syntax = "proto3";
+package action;
+option java_multiple_files = true;
+option java_package = "violet.aigc.common.proto_gen.action";
+option go_package = "/proto_gen/action";
+
+import "proto/common.proto";
+
+message LoginRequest{
+  string username = 1;
+  string password = 2;
+}
+message LoginResponse{
+  int64 user_id = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message RegisterRequest{
+  string username = 1;
+  string password = 2;
+  string confirm_password = 3;
+}
+message RegisterResponse{
+  common.BaseResp baseResp = 255;
+}
+
+message UserInfo{
+  int64 user_id = 1;
+  string username = 2;
+  string avatar = 3;
+}
+
+message GetUserInfosRequest{
+  repeated int64 user_ids = 1;
+}
+message GetUserInfosResponse{
+  repeated UserInfo user_infos = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message SearchUsersRequest{
+  string keyword = 1;
+  int32 page = 2;
+}
+message SearchUsersResponse{
+  repeated UserInfo user_infos = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message FollowRequest{
+  int64 from_user_id = 1;
+  int64 to_user_id = 2;
+}
+message FollowResponse{
+  common.BaseResp baseResp = 255;
+}
+
+message MIsFollowRequest{
+  int64 from_user_id = 1;
+  repeated int64 to_user_ids = 2;
+}
+message MIsFollowResponse{
+  map<int64, bool> is_following = 1;
+  map<int64, bool> is_follower = 2;
+  common.BaseResp baseResp = 255;
+}
+
+message GetFollowListRequest{
+  int64 user_id = 1;
+  int64 cursor = 2;
+  int64 limit = 3;
+}
+message GetFollowListResponse{
+  repeated int64 user_ids = 1;
+  int64 total = 2;
+  bool has_more = 3;
+  common.BaseResp baseResp = 255;
+}
+
+message MGetFollowCountRequest{
+  repeated int64 user_ids = 1;
+  bool need_follow = 2;
+  bool need_friend = 3;
+}
+message MGetFollowCountResponse{
+  map<int64, int64> following_count = 1;
+  map<int64, int64> follower_count = 2;
+  map<int64, int64> friend_count = 3;
+  common.BaseResp baseResp = 255;
+}
+
+message DiggRequest{
+  int64 user_id = 1;
+  string entity_type = 2;
+  int64 entity_id = 3;
+}
+message DiggResponse{
+  common.BaseResp baseResp = 255;
+}
+
+message GetDiggListByUserRequest{
+  int64 user_id = 1;
+  string entity_type = 2;
+  int32 page = 3;
+}
+message GetDiggListByUserResponse{
+  repeated int64 entity_ids = 1;
+  bool has_more = 2;
+  common.BaseResp baseResp = 255;
+}
+
+message MGetDiggCountByEntityRequest{
+  string entity_type = 1;
+  repeated int64 entity_ids = 2;
+}
+message MGetDiggCountByEntityResponse{
+  map<int64, int64> entity_digg_count = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message MIsDiggRequest{
+  int64 user_id = 1;
+  string entity_type = 2;
+  repeated int64 entity_ids = 3;
+}
+message MIsDiggResponse{
+  map<int64, bool> is_digg = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message CommentData{
+  int64 user_id = 1;
+  int64 comment_id = 2;
+  int32 content_type = 3;
+  string content = 4;
+  int32 level = 5;
+  int64 parent_id = 6;
+  string parent_type = 7;
+  int64 sib_id = 8;
+  int64 sib_user_id = 9;
+  int64 create_time = 10;
+  string extra = 11;
+  int64 reply_count = 12;
+  int64 digg_count = 13;
+}
+
+message CreateCommentRequest{
+  int64 user_id = 1;
+  string entity_type = 2;
+  int64 entity_id = 3;
+  int32 content_type = 4;
+  string content = 5;
+}
+message CreateCommentResponse{
+  int64 comment_id = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message CreateCommentReplyRequest{
+  int64 user_id = 1;
+  int64 parent_id = 2;
+  int64 sib_id = 3;
+  int64 sib_user_id = 4;
+  int32 content_type = 5;
+  string content = 6;
+}
+message CreateCommentReplyResponse{
+  int64 comment_id = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message GetCommentListRequest{
+  string entity_type = 1;
+  int64 entity_id = 2;
+  int32 page = 3;
+}
+message GetCommentListResponse{
+  repeated CommentData comment_list = 1;
+  bool has_more = 2;
+  common.BaseResp baseResp = 255;
+}
+
+message GetCommentReplyListRequest{
+  string entity_type = 1;
+  int64 entity_id = 2;
+  int64 comment_id = 3;
+  int32 page = 4;
+}
+message GetCommentReplyListResponse{
+  repeated CommentData comment_list = 1;
+  bool has_more = 2;
+  common.BaseResp baseResp = 255;
+}
+
+message GetCommentCountRequest{
+  string entity_type = 1;
+  int64 entity_id = 2;
+}
+message GetCommentCountResponse{
+  int64 comment_count = 1;
+  common.BaseResp baseResp = 255;
+}
+
+enum ActionType{
+  USER_ACTION_TYPE_Not_Use = 0;
+  expo = 1;
+  click = 2;
+  digg = 3;
+  comment = 4;
+  forward = 5;
+}
+message ReportUserActionRequest{
+  int64 user_id = 1;
+  string action_type_list = 2;
+  string creation_id_list = 3;
+  string timestamp_list = 4;
+}
+message ReportUserActionResponse{
+  common.BaseResp baseResp = 255;
+}
+
+service ActionService {
+  rpc Login(LoginRequest)returns(LoginResponse){}
+  rpc Register(RegisterRequest)returns(RegisterResponse){}
+  rpc GetUserInfos(GetUserInfosRequest)returns(GetUserInfosResponse){}
+  rpc SearchUsers(SearchUsersRequest)returns(SearchUsersResponse){}
+  rpc Follow(FollowRequest)returns(FollowResponse){}
+  rpc Unfollow(FollowRequest)returns(FollowResponse){}
+  rpc MIsFollowing(MIsFollowRequest)returns(MIsFollowResponse){}
+  rpc MIsFollower(MIsFollowRequest)returns(MIsFollowResponse){}
+  rpc GetFollowingList(GetFollowListRequest)returns(GetFollowListResponse){}
+  rpc GetFollowerList(GetFollowListRequest)returns(GetFollowListResponse){}
+  rpc GetFriendList(GetFollowListRequest)returns(GetFollowListResponse){}
+  rpc MGetFollowCount(MGetFollowCountRequest)returns(MGetFollowCountResponse){}
+  rpc Digg(DiggRequest)returns(DiggResponse){}
+  rpc CancelDigg(DiggRequest)returns(DiggResponse){}
+  rpc GetDiggListByUser(GetDiggListByUserRequest)returns(GetDiggListByUserResponse){}
+  rpc MGetDiggCountByEntity(MGetDiggCountByEntityRequest)returns(MGetDiggCountByEntityResponse){}
+  rpc MIsDigg(MIsDiggRequest)returns(MIsDiggResponse){}
+  rpc CreateComment(CreateCommentRequest)returns(CreateCommentResponse){}
+  rpc CreateCommentReply(CreateCommentReplyRequest)returns(CreateCommentReplyResponse){}
+  rpc GetCommentList(GetCommentListRequest)returns(GetCommentListResponse){}
+  rpc GetCommentReplyList(GetCommentReplyListRequest)returns(GetCommentReplyListResponse){}
+  rpc GetCommentCount(GetCommentCountRequest)returns(GetCommentCountResponse){}
+  rpc ReportUserAction(ReportUserActionRequest)returns(ReportUserActionResponse){}
+}

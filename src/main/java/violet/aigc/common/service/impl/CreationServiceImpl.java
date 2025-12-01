@@ -10,11 +10,15 @@ import io.milvus.v2.service.vector.request.data.EmbeddedText;
 import io.milvus.v2.service.vector.request.data.FloatVec;
 import io.milvus.v2.service.vector.response.SearchResp;
 import lombok.extern.slf4j.Slf4j;
+import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import violet.aigc.common.mapper.CreationGraphMapper;
 import violet.aigc.common.mapper.CreationMapper;
 import violet.aigc.common.pojo.Creation;
+import violet.aigc.common.proto_gen.action.ActionServiceGrpc;
+import violet.aigc.common.proto_gen.action.GetDiggListByUserRequest;
+import violet.aigc.common.proto_gen.action.GetDiggListByUserResponse;
 import violet.aigc.common.proto_gen.aigc.*;
 import violet.aigc.common.proto_gen.common.BaseResp;
 import violet.aigc.common.proto_gen.common.StatusCode;
@@ -31,6 +35,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class CreationServiceImpl implements CreationService {
+    @GrpcClient("action")
+    private ActionServiceGrpc.ActionServiceBlockingStub actionStub;
     @Autowired
     private MilvusClientV2 milvusClient;
     @Autowired
@@ -123,6 +129,31 @@ public class CreationServiceImpl implements CreationService {
     public GetCreationsByUserResponse getCreationsByUser(GetCreationsByUserRequest req) {
         GetCreationsByUserResponse.Builder resp = GetCreationsByUserResponse.newBuilder();
         List<Long> creationIds = creationGraphMapper.getCreationIdsByUser(req.getUserId(), req.getPage());
+        if (creationIds.isEmpty()) {
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+        return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
+    }
+
+    @Override
+    public GetCreationsByDiggResponse getCreationsByDigg(GetCreationsByDiggRequest req) {
+        GetCreationsByDiggResponse.Builder resp = GetCreationsByDiggResponse.newBuilder();
+        GetDiggListByUserRequest getDiggListByUserRequest = GetDiggListByUserRequest.newBuilder()
+                .setUserId(req.getUserId())
+                .setEntityType("creation")
+                .setPage(req.getPage())
+                .build();
+        GetDiggListByUserResponse getDiggListByUserResponse = actionStub.getDiggListByUser(getDiggListByUserRequest);
+        if (getDiggListByUserResponse.getBaseResp().getStatusCode() != StatusCode.Success) {
+            log.error("[getCreationsByDigg] getDiggListByUser rpc err, err = {}", getDiggListByUserResponse.getBaseResp());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        List<Long> creationIds = getDiggListByUserResponse.getEntityIdsList();
         if (creationIds.isEmpty()) {
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
             return resp.setBaseResp(baseResp).build();

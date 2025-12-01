@@ -11,6 +11,8 @@ public interface CreationService {
 
     GetCreationsByUserResponse getCreationsByUser(GetCreationsByUserRequest req);
 
+    GetCreationsByDiggResponse getCreationsByDigg(GetCreationsByDiggRequest req);
+
     GetCreationsByFriendResponse getCreationsByFriend(GetCreationsByFriendRequest req);
 
     GetCreationsByRecResponse getCreationsByRec(GetCreationsByRecRequest req);

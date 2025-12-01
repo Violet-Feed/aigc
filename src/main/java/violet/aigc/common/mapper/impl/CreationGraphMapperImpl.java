@@ -72,12 +72,6 @@ public class CreationGraphMapperImpl implements CreationGraphMapper {
     }
 
     @Override
-    public List<Long> getCreationIdsByDigg(Long userId, Integer page) {
-        int offset = (page - 1) * PAGE_SIZE;
-        return null;
-    }
-
-    @Override
     public List<Long> getCreationIdsByFriend(Long userId, Integer page) {
         int offset = (page - 1) * PAGE_SIZE;
         String userVid = String.valueOf(userId);
@@ -86,7 +80,7 @@ public class CreationGraphMapperImpl implements CreationGraphMapper {
                         "WHERE id(u1) == \"%s\" AND e.entity.entity_type == \"creation\" " +
                         "MATCH (u2)-[:follow]->(u1) " +
                         "RETURN " +
-                        "e.entity.entity_id AS creation_id " +
+                        "e.entity.entity_id AS creation_id, " +
                         "r.ts AS ts " +
                         "ORDER BY ts DESC " +
                         "SKIP %d LIMIT %d",

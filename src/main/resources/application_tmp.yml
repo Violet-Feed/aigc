@@ -2,6 +2,9 @@ grpc:
   server:
     port: 3005
   client:
+    action:
+      address: 'static://127.0.0.1:3003'
+      negotiation-type: plaintext
     im:
       address: 'static://127.0.0.1:3004'
       negotiation-type: plaintext

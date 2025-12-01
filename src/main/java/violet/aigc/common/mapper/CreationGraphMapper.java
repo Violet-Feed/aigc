@@ -7,7 +7,5 @@ public interface CreationGraphMapper {
 
     List<Long> getCreationIdsByUser(Long userId, Integer page);
 
-    List<Long> getCreationIdsByDigg(Long userId, Integer page);
-
     List<Long> getCreationIdsByFriend(Long userId, Integer page);
 }
