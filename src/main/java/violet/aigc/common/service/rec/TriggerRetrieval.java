@@ -1,4 +1,4 @@
-package violet.aigc.common.service.recall;
+package violet.aigc.common.service.rec;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import violet.aigc.common.pojo.UserAction;
 import violet.aigc.common.utils.TimeUtil;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,8 +42,8 @@ public class TriggerRetrieval {
             for (String json : result) {
                 try {
                     UserAction action = JSON.parseObject(json, UserAction.class);
-                    if (action != null && action.getCreationId() != null) {
-                        triggerIds.add(action.getCreationId());
+                    if (action != null && action.getCreationIdList() != null) {
+                        triggerIds.addAll(Arrays.stream(action.getCreationIdList().split(",")).map(Long::valueOf).collect(Collectors.toList()));
                     }
                 } catch (Exception e) {
                     log.error("[TriggerRetrieval] json parse failed");

@@ -1,4 +1,4 @@
-package violet.aigc.common.service.recall;
+package violet.aigc.common.service.rec;
 
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Component;
 import violet.aigc.common.utils.TimeUtil;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,15 +38,8 @@ public class FilterRetrieval {
         Set<Long> filterIds = new HashSet<>();
         for (List<String> result : results) {
             if (result == null) continue;
-            for (String json : result) {
-                try {
-                    Long filterId = JSON.parseObject(json, Long.class);
-                    if (filterId != null) {
-                        filterIds.add(filterId);
-                    }
-                } catch (Exception e) {
-                    log.error("[FilterRetrieval] json parse failed");
-                }
+            for (String str : result) {
+                filterIds.addAll(Arrays.stream(str.split(",")).map(Long::valueOf).collect(Collectors.toList()));
             }
         }
         return filterIds;

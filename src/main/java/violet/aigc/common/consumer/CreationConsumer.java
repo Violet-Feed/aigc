@@ -32,7 +32,7 @@ public class CreationConsumer {
     public void listen(ConsumerRecord<String, String> record) {
         log.info("Received message: key = {}, value = {}, partition = {}, offset = {}", record.key(), record.value(), record.partition(), record.offset());
         JSONObject json = JSON.parseObject(record.value());
-        Creation creation = JSON.parseObject(json.getString("payload"), Creation.class, JSONReader.Feature.SupportSmartMatch);
+        Creation creation = JSON.parseObject(json.getString("payload"), Creation.class);
         List<Float> titleEmbedding = QwenUtil.getTextEmbedding(creation.getTitle());
         List<JsonObject> data = Collections.singletonList(new Gson().fromJson(String.format(
                 "{\"creation_id\": %d, \"rec_embeddings\": %s, \"title\": %s}",

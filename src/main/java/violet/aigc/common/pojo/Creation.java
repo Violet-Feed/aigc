@@ -1,6 +1,8 @@
 package violet.aigc.common.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +12,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Creation {
     private Long id;
     private Long creationId;
@@ -32,17 +35,17 @@ public class Creation {
         return violet.aigc.common.proto_gen.aigc.Creation.newBuilder()
                 .setCreationId(this.creationId)
                 .setUserId(this.userId)
-                .setCoverUrl(this.coverUrl)
+                .setCoverUrl(this.coverUrl == null ? "" : this.coverUrl)
                 .setMaterialId(this.materialId)
                 .setMaterialType(this.materialType)
-                .setMaterialUrl(this.materialUrl)
+                .setMaterialUrl(this.materialUrl == null ? "" : this.materialUrl)
                 .setTitle(this.title)
-                .setContent(this.content)
-                .setCategory(this.category)
+                .setContent(this.content == null ? "" : this.content)
+                .setCategory(this.category == null ? "" : this.category)
                 .setCreateTime(this.createTime.getTime())
                 .setModifyTime(this.modifyTime.getTime())
                 .setStatus(this.status)
-                .setExtra(this.extra)
+                .setExtra(this.extra == null ? "" : this.extra)
                 .build();
     }
 }

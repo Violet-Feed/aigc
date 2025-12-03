@@ -30,12 +30,12 @@ public class Material {
                 .setMaterialType(this.materialType)
                 .setUserId(this.userId)
                 .setPrompt(this.prompt)
-                .setSourceUrl(this.sourceUrl)
+                .setSourceUrl(this.sourceUrl == null ? "" : this.sourceUrl)
                 .setMaterialUrl(this.materialUrl)
                 .setModel(this.model)
                 .setCreateTime(this.createTime.getTime())
                 .setStatus(this.status)
-                .setExtra(this.extra)
+                .setExtra(this.extra == null ? "" : this.extra)
                 .build();
     }
 }

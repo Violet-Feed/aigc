@@ -1,4 +1,4 @@
-package violet.aigc.common.service.recall;
+package violet.aigc.common.service.rec;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,44 +15,43 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-public class HotRecall implements CommonRecall {
+public class TrendRecall {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
     @Autowired
     private CreationMapper creationMapper;
 
-    @Override
+    private static final int RECALL_SIZE = 10;
+
     public Set<Long> recall(Set<Long> triggerIds) {
         List<String> keys = new ArrayList<>();
-        if (triggerIds.isEmpty()) {
+        if (!triggerIds.isEmpty()) {
             List<Creation> creations = creationMapper.selectByCreationIds(new ArrayList<>(triggerIds));
             List<String> categoryKeys = creations.stream()
                     .map(Creation::getCategory)
                     .filter(Objects::nonNull)
                     .distinct()
-                    .map(category -> "hot:" + category)
+                    .map(category -> "trend:" + category)
                     .collect(Collectors.toList());
             keys.addAll(categoryKeys);
         }
-        keys.add("hot:all");
-        List<Object> results = redisTemplate.executePipelined(new SessionCallback<Object>() {
+        keys.add("trend:all");
+        List<Set<String>> results = (List<Set<String>>) (List<?>) redisTemplate.executePipelined(new SessionCallback<Object>() {
             @Override
             public Object execute(RedisOperations operations) {
                 ZSetOperations<String, String> zSetOps = operations.opsForZSet();
                 for (String key : keys) {
-                    zSetOps.reverseRange(key, 0, 99);
+                    zSetOps.reverseRange(key, 0, RECALL_SIZE-1);
                 }
                 return null;
             }
         });
 
         Set<Long> recallResults = new HashSet<>();
-        for (Object result : results) {
-            if (result instanceof Set) {
-                ((Set<String>) result).stream()
-                        .map(Long::valueOf)
-                        .forEach(recallResults::add);
-            }
+        for (Set<String> result : results) {
+            result.stream()
+                    .map(Long::valueOf)
+                    .forEach(recallResults::add);
         }
         return recallResults;
     }

@@ -1,5 +1,6 @@
 package violet.aigc.common.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import io.milvus.common.clientenum.FunctionType;
 import io.milvus.v2.client.MilvusClientV2;
 import io.milvus.v2.service.collection.request.CreateCollectionReq;
@@ -12,6 +13,7 @@ import io.milvus.v2.service.vector.response.SearchResp;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import violet.aigc.common.mapper.CreationGraphMapper;
 import violet.aigc.common.mapper.CreationMapper;
@@ -23,13 +25,15 @@ import violet.aigc.common.proto_gen.aigc.*;
 import violet.aigc.common.proto_gen.common.BaseResp;
 import violet.aigc.common.proto_gen.common.StatusCode;
 import violet.aigc.common.service.CreationService;
-import violet.aigc.common.service.recall.*;
+import violet.aigc.common.service.rec.*;
 import violet.aigc.common.utils.QwenUtil;
 import violet.aigc.common.utils.SnowFlake;
+import violet.aigc.common.utils.TimeUtil;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -44,17 +48,24 @@ public class CreationServiceImpl implements CreationService {
     @Autowired
     private CreationGraphMapper creationGraphMapper;
     @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
     private TriggerRetrieval triggerRetrieval;
     @Autowired
     private FilterRetrieval filterRetrieval;
     @Autowired
     private SwingRecall swingRecall;
     @Autowired
-    private HotRecall hotRecall;
+    private TrendRecall trendRecall;
     @Autowired
     private EmbeddingRecall embeddingRecall;
     @Autowired
-    private SimpleRanker simpleRanker;
+    private BackupRecall backupRecall;
+    @Autowired
+    private BeforeRanker beforeRanker;
+    @Autowired
+    private RandomRanker randomRanker;
 
     private final SnowFlake creationIdGenerator = new SnowFlake(0, 0);
     private ExecutorService asyncExecutor;
@@ -181,79 +192,121 @@ public class CreationServiceImpl implements CreationService {
     @Override
     public GetCreationsByRecResponse getCreationsByRec(GetCreationsByRecRequest req) {
         GetCreationsByRecResponse.Builder resp = GetCreationsByRecResponse.newBuilder();
-        List<Creation> creations;
+        Long userId = req.getUserId();
         try {
-            CompletableFuture<Set<Long>> triggerFuture = CompletableFuture.supplyAsync(() -> triggerRetrieval.retrieve(req.getUserId()), asyncExecutor);
-            CompletableFuture<Set<Long>> filterFuture = CompletableFuture.supplyAsync(() -> filterRetrieval.retrieve(req.getUserId()), asyncExecutor);
+            CompletableFuture<Set<Long>> triggerFuture = CompletableFuture.supplyAsync(() -> triggerRetrieval.retrieve(userId), asyncExecutor);
+            CompletableFuture<Set<Long>> filterFuture = CompletableFuture.supplyAsync(() -> filterRetrieval.retrieve(userId), asyncExecutor);
+            CompletableFuture<Set<Long>> backupFuture = CompletableFuture.supplyAsync(() -> backupRecall.recall(), asyncExecutor);
             Set<Long> triggerIds = triggerFuture.get();
-            CompletableFuture<Set<Long>> swingFuture = new CompletableFuture<>();
-            CompletableFuture<Set<Long>> embeddingFuture = new CompletableFuture<>();
-            if (!triggerIds.isEmpty()) {
+
+            CompletableFuture<Set<Long>> swingFuture;
+            CompletableFuture<Set<Long>> embeddingFuture;
+            if (triggerIds.isEmpty()) {
+                swingFuture = CompletableFuture.completedFuture(Collections.emptySet());
+                embeddingFuture = CompletableFuture.completedFuture(Collections.emptySet());
+            } else {
                 swingFuture = CompletableFuture.supplyAsync(() -> swingRecall.recall(triggerIds), asyncExecutor);
                 embeddingFuture = CompletableFuture.supplyAsync(() -> embeddingRecall.recall(triggerIds), asyncExecutor);
             }
-            CompletableFuture<Set<Long>> hotFuture = CompletableFuture.supplyAsync(() -> hotRecall.recall(triggerIds), asyncExecutor);
+            CompletableFuture<Set<Long>> trendFuture = CompletableFuture.supplyAsync(() -> trendRecall.recall(triggerIds), asyncExecutor);
+
+            CompletableFuture.allOf(filterFuture, backupFuture, swingFuture, embeddingFuture, trendFuture).join();
+            Set<Long> swingResults     = swingFuture.get();
+            Set<Long> embeddingResults = embeddingFuture.get();
+            Set<Long> trendResults     = trendFuture.get();
+            Set<Long> backupIds        = backupFuture.get();
+            Set<Long> filterIds        = filterFuture.get();
+
             Set<Long> allRecallResults = new HashSet<>();
-            if (!triggerIds.isEmpty()) {
-                allRecallResults.addAll(swingFuture.get());
-                allRecallResults.addAll(embeddingFuture.get());
-            }
-            allRecallResults.addAll(hotFuture.get());
-            Set<Long> filterIds = filterFuture.get();
-            List<Long> rankedIds = simpleRanker.rank(allRecallResults, filterIds);
-            creations = creationMapper.selectByCreationIds(rankedIds);
-        } catch (InterruptedException | ExecutionException e) {
-            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
-            return resp.setBaseResp(baseResp).build();
+            allRecallResults.addAll(swingResults);
+            allRecallResults.addAll(embeddingResults);
+            allRecallResults.addAll(trendResults);
+            Set<Long> beforeRankResults = beforeRanker.execute(allRecallResults, filterIds, backupIds);
+            List<Long> rankedResults    = randomRanker.rank(beforeRankResults);
+
+            List<Creation> creations = creationMapper.selectByCreationIds(rankedResults);
+            List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
+
+            String expoKey = "expo:" + userId + ":" + TimeUtil.getNowDate();
+            String expoValue = rankedResults.stream().map(String::valueOf).collect(Collectors.joining(","));
+            redisTemplate.opsForList().rightPush(expoKey, expoValue);
+
+            log.info("[getCreationsByRec] userId={}, triggerIds={}, filterIds={}, " +
+                            "swingResults={}, embeddingResults={}, trendResults={}, " +
+                            "backupIds={}, recallIds={}, beforeRankIds={}, finalIds={}",
+                    userId, triggerIds, filterIds, swingResults, embeddingResults, trendResults, backupIds, allRecallResults, beforeRankResults, rankedResults
+            );
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+            return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("[getCreationsByRec] interrupted, userId={}", req.getUserId(), e);
+        } catch (ExecutionException e) {
+            log.error("[getCreationsByRec] execution error, userId={}", req.getUserId(), e);
         }
-        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
-        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
-        return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
+        return resp.setBaseResp(baseResp).build();
     }
 
     @Override
     public GetCreationsBySearchResponse getCreationsBySearch(GetCreationsBySearchRequest req) {
-        //todo:status过滤，分页
         GetCreationsBySearchResponse.Builder resp = GetCreationsBySearchResponse.newBuilder();
         int offset = (req.getPage() - 1) * PAGE_SIZE;
-        List<Float> keywordEmbedding = QwenUtil.getTextEmbedding(req.getKeyword());
-        List<BaseVector> queryEmbedding = Collections.singletonList(new FloatVec(keywordEmbedding));
-        List<BaseVector> queryTexts = Collections.singletonList(new EmbeddedText(req.getKeyword()));
-        List<AnnSearchReq> searchRequests = new ArrayList<>();
-        searchRequests.add(AnnSearchReq.builder()
-                .vectorFieldName("rec_embeddings")
-                .vectors(queryEmbedding)
-                .params("{\"ef\": 10}")
-                .topK(10)
-                .build());
-        searchRequests.add(AnnSearchReq.builder()
-                .vectorFieldName("title_embeddings")
-                .vectors(queryTexts)
-                .params("{\"drop_ratio_search\": 0.2}")
-                .topK(10)
-                .build());
-        CreateCollectionReq.Function ranker = CreateCollectionReq.Function.builder()
-                .name("rrf")
-                .functionType(FunctionType.RERANK)
-                .param("reranker", "rrf")
-                .param("k", "60")
-                .build();
-        HybridSearchReq hybridSearchReq = HybridSearchReq.builder()
-                .collectionName("creation")
-                .searchRequests(searchRequests)
-                .ranker(ranker)
-                .topK(20)
-                .offset(offset)
-                .build();
-        List<List<SearchResp.SearchResult>> searchResults = milvusClient.hybridSearch(hybridSearchReq).getSearchResults();
-        List<Long> recallResults = new ArrayList<>();
-        if (!searchResults.isEmpty()) {
-            recallResults = searchResults.get(0).stream()
-                    .map(searchResult -> (Long) searchResult.getId())
-                    .collect(Collectors.toList());
+        String cacheKey = "search:" + req.getKeyword();
+        List<Long> creationIds;
+        String cacheValue = redisTemplate.opsForValue().get(cacheKey);
+        if (cacheValue != null) {
+            creationIds = JSON.parseArray(cacheValue, Long.class);
+        } else {
+            List<Float> keywordEmbedding = QwenUtil.getTextEmbedding(req.getKeyword());
+            List<BaseVector> queryEmbedding = Collections.singletonList(new FloatVec(keywordEmbedding));
+            List<BaseVector> queryTexts = Collections.singletonList(new EmbeddedText(req.getKeyword()));
+            List<AnnSearchReq> searchRequests = new ArrayList<>();
+            searchRequests.add(AnnSearchReq.builder()
+                    .vectorFieldName("rec_embeddings")
+                    .vectors(queryEmbedding)
+                    .params("{\"ef\": 10}")
+                    .topK(200)
+                    .build());
+            searchRequests.add(AnnSearchReq.builder()
+                    .vectorFieldName("title_embeddings")
+                    .vectors(queryTexts)
+                    .params("{\"drop_ratio_search\": 0.2}")
+                    .topK(300)
+                    .build());
+            CreateCollectionReq.Function ranker = CreateCollectionReq.Function.builder()
+                    .name("rrf")
+                    .functionType(FunctionType.RERANK)
+                    .param("reranker", "rrf")
+                    .param("k", "60")
+                    .build();
+            HybridSearchReq hybridSearchReq = HybridSearchReq.builder()
+                    .collectionName("creation")
+                    .searchRequests(searchRequests)
+                    .ranker(ranker)
+                    .topK(400)
+                    .build();
+            SearchResp searchResp = milvusClient.hybridSearch(hybridSearchReq);
+            List<List<SearchResp.SearchResult>> searchResults = searchResp.getSearchResults();
+            creationIds = new ArrayList<>();
+            if (!searchResults.isEmpty()) {
+                for (SearchResp.SearchResult result : searchResults.get(0)) {
+                    creationIds.add((Long) result.getId());
+                }
+            }
+            redisTemplate.opsForValue().set(cacheKey, JSON.toJSONString(creationIds), 10, TimeUnit.MINUTES);
         }
-        List<Creation> creations = creationMapper.selectByCreationIds(recallResults);
-        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
+        if (offset >= creationIds.size()) {
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        int toIndex = Math.min(offset + PAGE_SIZE, creationIds.size());
+        List<Long> pageIds = creationIds.subList(offset, toIndex);
+        log.info("[getCreationsBySearch] keyword={}, totalIds={}, offset={}, toIndex={}, pageIds={}", req.getKeyword(), creationIds.size(), offset, toIndex, pageIds);
+        List<Creation> creations = creationMapper.selectByCreationIds(pageIds);
+        Map<Long, Creation> creationMap = creations.stream().collect(Collectors.toMap(Creation::getCreationId, Function.identity()));
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = pageIds.stream().map(creationMap::get).filter(Objects::nonNull).map(Creation::toProto).collect(Collectors.toList());
+        boolean hasMore = toIndex < creationIds.size();
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
     }

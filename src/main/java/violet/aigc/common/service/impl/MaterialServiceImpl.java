@@ -161,12 +161,13 @@ public class MaterialServiceImpl implements MaterialService {
     @Override
     public VideoMaterialCallbackResponse videoMaterialCallback(VideoMaterialCallbackRequest req) {
         VideoMaterialCallbackResponse.Builder resp = VideoMaterialCallbackResponse.newBuilder();
-        Long materialId = Long.valueOf(redisTemplate.opsForValue().get("video_task:" + req.getTaskId()));
-        if (materialId == null) {
+        String materialIdStr = redisTemplate.opsForValue().get("video_task:" + req.getTaskId());
+        if (materialIdStr == null) {
             log.error("未找到对应的素材ID，任务ID：{}", req.getTaskId());
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).setStatusMessage("未找到对应的素材ID").build();
             return resp.setBaseResp(baseResp).build();
         }
+        Long materialId = Long.valueOf(materialIdStr);
         if (req.getStatusCode() != 0 || "Fail".equals(req.getStatus())) {
             log.error("视频生成失败，素材ID：{}，错误信息：{}", materialId, req.getStatusMsg());
             Material material = new Material();
