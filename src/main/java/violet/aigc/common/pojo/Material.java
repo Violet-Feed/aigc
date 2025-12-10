@@ -18,6 +18,7 @@ public class Material {
     private String prompt;
     private String sourceUrl;
     private String materialUrl;
+    private String coverUrl;
     private String model;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date createTime;
@@ -32,6 +33,7 @@ public class Material {
                 .setPrompt(this.prompt)
                 .setSourceUrl(this.sourceUrl == null ? "" : this.sourceUrl)
                 .setMaterialUrl(this.materialUrl)
+                .setCoverUrl(this.coverUrl)
                 .setModel(this.model)
                 .setCreateTime(this.createTime.getTime())
                 .setStatus(this.status)

@@ -102,4 +102,27 @@ public class OSSUtil {
             throw new RuntimeException("上传失败：" + e.getMessage(), e);
         }
     }
+
+    public static String upload(InputStream inputStream, String path) {
+        if (ossClient == null) {
+            throw new RuntimeException("OSSClient 未初始化，无法上传");
+        }
+        try {
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, path, inputStream);
+            PutObjectResult result = ossClient.putObject(putObjectRequest);
+            String ossAccessUrl = String.format("https://%s.%s/%s",
+                    bucketName,
+                    endpoint.replace("https://", ""),
+                    path);
+            return ossAccessUrl;
+        } catch (OSSException oe) {
+            String errMsg = String.format("OSS服务端异常：Code=%s, Msg=%s, RequestId=%s, HostId=%s", oe.getErrorCode(), oe.getErrorMessage(), oe.getRequestId(), oe.getHostId());
+            throw new RuntimeException(errMsg);
+        } catch (ClientException ce) {
+            throw new RuntimeException("OSS客户端异常：" + ce.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("上传失败：" + e.getMessage(), e);
+        }
+    }
+
 }
