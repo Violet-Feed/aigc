@@ -42,27 +42,4 @@ public class NebulaConfig {
         }
         return pool;
     }
-
-    @Bean("session")
-    @Primary
-    @Scope(scopeName = "prototype", proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public Session session(NebulaPool nebulaPool) {
-        try {
-            Session session = nebulaPool.getSession(username, password, false);
-            session.execute("USE violet;");
-            return session;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Bean("swingSession")
-    @Scope(scopeName = "prototype", proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public Session swingSession(NebulaPool nebulaPool) {
-        try {
-            return nebulaPool.getSession(username, password, false);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

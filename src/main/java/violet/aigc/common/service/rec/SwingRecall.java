@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import violet.aigc.common.repository.NebulaSwingManager;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -16,38 +17,8 @@ import java.util.*;
 @Component
 public class SwingRecall {
     @Autowired
-    @Qualifier("swingSession")
-    private Session session;
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-
-    // 用volatile保证多线程可见性（定时任务更新后，recall方法能立即读到最新值）
-    private volatile String space = "swing";
+    private NebulaSwingManager nebulaSwingManager;
     private static final int RECALL_SIZE = 10;
-
-    @PostConstruct
-    public void initSpace() {
-        refreshSpace();
-    }
-
-    @Scheduled(fixedRate = 5 * 60 * 1000)
-    public void refreshSpaceTask() {
-        refreshSpace();
-    }
-
-    private void refreshSpace() {
-        try {
-            String latestSpace = redisTemplate.opsForValue().get("swing-space");
-            if (latestSpace != null && !latestSpace.trim().isEmpty()) {
-                this.space = latestSpace.trim();
-                log.info("成功从kvrocks刷新space，最新值：{}", this.space);
-            } else {
-                log.warn("kvrocks中未获取到有效space值，保留当前值：{}", this.space);
-            }
-        } catch (Exception e) {
-            log.error("从kvrocks刷新space失败", e);
-        }
-    }
 
     public Set<Long> recall(Set<Long> triggerIds) {
         List<String> queries = new ArrayList<>();
@@ -67,8 +38,7 @@ public class SwingRecall {
         }
         String nGQL = String.join(" UNION ALL ", queries);
         try {
-            session.execute("USE " + space);
-            ResultSet resultSet = session.execute(nGQL);
+            ResultSet resultSet = nebulaSwingManager.execute(nGQL);
             if (!resultSet.isSucceeded()) {
                 log.error("swing recall failed: {}", resultSet.getErrorMessage());
                 return Collections.emptySet();

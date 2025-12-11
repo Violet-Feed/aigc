@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import violet.aigc.common.mapper.CreationGraphMapper;
+import violet.aigc.common.repository.NebulaManager;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ import java.util.List;
 @Repository
 public class CreationGraphMapperImpl implements CreationGraphMapper {
     @Autowired
-    private Session session;
+    private NebulaManager nebulaManager;
 
     private static final int PAGE_SIZE = 20;
 
@@ -32,15 +33,10 @@ public class CreationGraphMapperImpl implements CreationGraphMapper {
                 creationVid, creationId,
                 userVid, creationVid, System.currentTimeMillis()
         );
-        try {
-            ResultSet resultSet = session.execute(nGQL);
-            if (!resultSet.isSucceeded()) {
-                log.error("createCreation failed, userId: {}, creationId: {}, error: {}", userId, creationId, resultSet.getErrorMessage());
-                throw new RuntimeException("createCreation failed: " + resultSet.getErrorMessage());
-            }
-        } catch (IOErrorException e) {
-            log.error("createCreation failed, userId: {}, creationId: {}", userId, creationId, e);
-            throw new RuntimeException(e);
+        ResultSet resultSet = nebulaManager.execute(nGQL);
+        if (!resultSet.isSucceeded()) {
+            log.error("createCreation failed, userId: {}, creationId: {}, error: {}", userId, creationId, resultSet.getErrorMessage());
+            throw new RuntimeException("createCreation failed: " + resultSet.getErrorMessage());
         }
     }
 
@@ -58,17 +54,12 @@ public class CreationGraphMapperImpl implements CreationGraphMapper {
                         "SKIP %d LIMIT %d",
                 userVid, offset, PAGE_SIZE
         );
-        try {
-            ResultSet resultSet = session.execute(nGQL);
-            if (!resultSet.isSucceeded()) {
-                log.error("Query failed - user: {}, error: {}", userId, resultSet.getErrorMessage());
-                throw new RuntimeException("Query failed: " + resultSet.getErrorMessage());
-            }
-            return parseCreations(resultSet);
-        } catch (IOErrorException | UnsupportedEncodingException e) {
-            log.error("Failed to query creations - user: {}, page: {}", userId, page, e);
-            throw new RuntimeException(e);
+        ResultSet resultSet = nebulaManager.execute(nGQL);
+        if (!resultSet.isSucceeded()) {
+            log.error("Query failed - user: {}, error: {}", userId, resultSet.getErrorMessage());
+            throw new RuntimeException("Query failed: " + resultSet.getErrorMessage());
         }
+        return parseCreations(resultSet);
     }
 
     @Override
@@ -86,20 +77,15 @@ public class CreationGraphMapperImpl implements CreationGraphMapper {
                         "SKIP %d LIMIT %d",
                 userVid, offset, PAGE_SIZE
         );
-        try {
-            ResultSet resultSet = session.execute(nGQL);
-            if (!resultSet.isSucceeded()) {
-                log.error("Query friend creations failed - user: {}, error: {}", userId, resultSet.getErrorMessage());
-                throw new RuntimeException("Query failed: " + resultSet.getErrorMessage());
-            }
-            return parseCreations(resultSet);
-        } catch (IOErrorException | UnsupportedEncodingException e) {
-            log.error("Failed to query friend creations - user: {}, page: {}", userId, page, e);
-            throw new RuntimeException(e);
+        ResultSet resultSet = nebulaManager.execute(nGQL);
+        if (!resultSet.isSucceeded()) {
+            log.error("Query friend creations failed - user: {}, error: {}", userId, resultSet.getErrorMessage());
+            throw new RuntimeException("Query failed: " + resultSet.getErrorMessage());
         }
+        return parseCreations(resultSet);
     }
 
-    private List<Long> parseCreations(ResultSet resultSet) throws UnsupportedEncodingException {
+    private List<Long> parseCreations(ResultSet resultSet) {
         List<Long> creationIds = new ArrayList<>();
         for (int i = 0; i < resultSet.rowsSize(); i++) {
             ResultSet.Record record = resultSet.rowValues(i);
