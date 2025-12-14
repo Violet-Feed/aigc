@@ -9,6 +9,8 @@ public interface CreationService {
 
     GetCreationByIdResponse getCreationById(GetCreationByIdRequest req);
 
+    GetCreationByIdsResponse getCreationByIds(GetCreationByIdsRequest req);
+
     GetCreationsByUserResponse getCreationsByUser(GetCreationsByUserRequest req);
 
     GetCreationsByDiggResponse getCreationsByDigg(GetCreationsByDiggRequest req);

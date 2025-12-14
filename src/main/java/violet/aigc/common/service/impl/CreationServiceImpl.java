@@ -137,6 +137,15 @@ public class CreationServiceImpl implements CreationService {
     }
 
     @Override
+    public GetCreationByIdsResponse getCreationByIds(GetCreationByIdsRequest req) {
+        GetCreationByIdsResponse.Builder resp = GetCreationByIdsResponse.newBuilder();
+        List<Creation> creations = creationMapper.selectByCreationIds(req.getCreationIdsList());
+        Map<Long, violet.aigc.common.proto_gen.aigc.Creation> creationMap = creations.stream().collect(Collectors.toMap(Creation::getCreationId, Creation::toProto));
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+        return resp.setBaseResp(baseResp).putAllCreations(creationMap).build();
+    }
+
+    @Override
     public GetCreationsByUserResponse getCreationsByUser(GetCreationsByUserRequest req) {
         GetCreationsByUserResponse.Builder resp = GetCreationsByUserResponse.newBuilder();
         List<Long> creationIds = creationGraphMapper.getCreationIdsByUser(req.getUserId(), req.getPage());
@@ -211,18 +220,18 @@ public class CreationServiceImpl implements CreationService {
             CompletableFuture<Set<Long>> trendFuture = CompletableFuture.supplyAsync(() -> trendRecall.recall(triggerIds), asyncExecutor);
 
             CompletableFuture.allOf(filterFuture, backupFuture, swingFuture, embeddingFuture, trendFuture).join();
-            Set<Long> swingResults     = swingFuture.get();
+            Set<Long> swingResults = swingFuture.get();
             Set<Long> embeddingResults = embeddingFuture.get();
-            Set<Long> trendResults     = trendFuture.get();
-            Set<Long> backupIds        = backupFuture.get();
-            Set<Long> filterIds        = filterFuture.get();
+            Set<Long> trendResults = trendFuture.get();
+            Set<Long> backupIds = backupFuture.get();
+            Set<Long> filterIds = filterFuture.get();
 
             Set<Long> allRecallResults = new HashSet<>();
             allRecallResults.addAll(swingResults);
             allRecallResults.addAll(embeddingResults);
             allRecallResults.addAll(trendResults);
             Set<Long> beforeRankResults = beforeRanker.execute(allRecallResults, filterIds, backupIds);
-            List<Long> rankedResults    = randomRanker.rank(beforeRankResults);
+            List<Long> rankedResults = randomRanker.rank(beforeRankResults);
 
             List<Creation> creations = creationMapper.selectByCreationIds(rankedResults);
             List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());

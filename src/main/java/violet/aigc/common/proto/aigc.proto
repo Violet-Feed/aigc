@@ -2,7 +2,7 @@ syntax = "proto3";
 package creation;
 option java_multiple_files = true;
 option java_package = "violet.aigc.common.proto_gen.aigc";
-option go_package = "/proto_gen/aigc";
+option go_package = "im/proto_gen/aigc";
 
 import "proto/common.proto";
 
@@ -118,6 +118,14 @@ message GetCreationByIdResponse{
   common.BaseResp baseResp = 255;
 }
 
+message GetCreationByIdsRequest{
+  repeated int64 creation_ids = 1;
+}
+message GetCreationByIdsResponse{
+  map<int64, Creation> creations = 1;
+  common.BaseResp baseResp = 255;
+}
+
 message GetCreationsByUserRequest{
   int64 user_id = 1;
   int32 page = 2;
@@ -171,6 +179,7 @@ service AigcService {
   rpc CreateCreation(CreateCreationRequest)returns(CreateCreationResponse){}
   rpc DeleteCreation(DeleteCreationRequest)returns(DeleteCreationResponse){}
   rpc GetCreationById(GetCreationByIdRequest)returns(GetCreationByIdResponse){}
+  rpc GetCreationByIds(GetCreationByIdsRequest)returns(GetCreationByIdsResponse){}
   rpc GetCreationsByUser(GetCreationsByUserRequest)returns(GetCreationsByUserResponse){}
   rpc GetCreationsByDigg(GetCreationsByDiggRequest)returns(GetCreationsByDiggResponse){}
   rpc GetCreationsByFriend(GetCreationsByFriendRequest)returns(GetCreationsByFriendResponse){}

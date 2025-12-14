@@ -255,7 +255,7 @@ public class MaterialServiceImpl implements MaterialService {
         return resp.setBaseResp(baseResp).addAllMaterial(materialDto).build();
     }
 
-    private void updateAndPushMaterial(Material material){
+    private void updateAndPushMaterial(Material material) {
         if (!materialMapper.updateMaterialAfterUpload(material)) {
             log.error("素材状态更新失败，素材ID：{}", material.getMaterialId());
             material.setStatus(MaterialStatus.Failed_VALUE);

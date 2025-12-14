@@ -21,7 +21,7 @@ public class NebulaSwingManager {
     private final String username;
     private final String password;
     private static final String SWING_SPACE_KEY = "swing-space";
-    private static final String DEFAULT_SPACE   = "swing";
+    private static final String DEFAULT_SPACE = "swing";
 
     private volatile String currentSpace = DEFAULT_SPACE;
 

@@ -94,6 +94,17 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
     }
 
     @Override
+    public void getCreationByIds(GetCreationByIdsRequest request, StreamObserver<GetCreationByIdsResponse> responseObserver) {
+        try {
+            responseObserver.onNext(creationService.getCreationByIds(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("getCreationByIds error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
     public void getCreationsByUser(GetCreationsByUserRequest request, StreamObserver<GetCreationsByUserResponse> responseObserver) {
         try {
             responseObserver.onNext(creationService.getCreationsByUser(request));

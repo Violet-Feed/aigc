@@ -41,7 +41,7 @@ public class TrendRecall {
             public Object execute(RedisOperations operations) {
                 ZSetOperations<String, String> zSetOps = operations.opsForZSet();
                 for (String key : keys) {
-                    zSetOps.reverseRange(key, 0, RECALL_SIZE-1);
+                    zSetOps.reverseRange(key, 0, RECALL_SIZE - 1);
                 }
                 return null;
             }

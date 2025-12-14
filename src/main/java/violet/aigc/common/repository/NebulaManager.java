@@ -15,7 +15,7 @@ public class NebulaManager {
     private final NebulaPool nebulaPool;
     private final String username;
     private final String password;
-    private static final String DEFAULT_SPACE   = "violet";
+    private static final String DEFAULT_SPACE = "violet";
 
     public NebulaManager(NebulaPool nebulaPool,
                          @Value("${nebula.username}") String username,

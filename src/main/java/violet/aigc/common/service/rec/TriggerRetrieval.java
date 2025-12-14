@@ -7,7 +7,7 @@ import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Component;
-import violet.aigc.common.pojo.UserAction;
+import violet.aigc.common.pojo.Action;
 import violet.aigc.common.utils.TimeUtil;
 
 import java.util.Arrays;
@@ -41,7 +41,7 @@ public class TriggerRetrieval {
             if (result == null) continue;
             for (String json : result) {
                 try {
-                    UserAction action = JSON.parseObject(json, UserAction.class);
+                    Action action = JSON.parseObject(json, Action.class);
                     if (action != null && action.getCreationIdList() != null) {
                         triggerIds.addAll(Arrays.stream(action.getCreationIdList().split(",")).map(Long::valueOf).collect(Collectors.toList()));
                     }

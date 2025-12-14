@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class UserAction {
+public class Action {
     private Long userId;
+    private Integer actionType;
     private String creationIdList;
-    private String actionTypeList;
-    private String timestampList;
+    private Long timestamp;
 }
