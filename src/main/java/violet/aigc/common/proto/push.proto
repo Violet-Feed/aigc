@@ -14,7 +14,7 @@ enum PacketType{
   Normal = 3;
   Command = 4;
   Material = 5;
-  Action = 6;
+  Notice = 6;
 }
 
 message ConnectPacket{
@@ -38,7 +38,16 @@ message MaterialPacket{
   int64 create_time = 5;
   int32 status = 6;
 }
-message ActionPacket{
+enum NoticeOpType{
+  NoticeOpType_Not_Use = 0;
+  Send = 1;
+  MarkRead = 2;
+}
+message NoticePacket{
+  int32 group = 1;
+  int32 op_type = 2;
+  bool new_notice = 3;
+  im.NoticeBody notice_body = 4;
 }
 
 message PushRequest{
@@ -47,7 +56,7 @@ message PushRequest{
   NormalPacket normal_packet = 3;
   CommandPacket command_packet = 4;
   MaterialPacket material_packet = 5;
-  ActionPacket action_packet = 6;
+  NoticePacket notice_packet = 6;
 }
 message PushResponse{
   common.BaseResp baseResp = 255;

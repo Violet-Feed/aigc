@@ -32,7 +32,11 @@ public class EmbeddingRecall {
         List<QueryResp.QueryResult> queryResults = getResp.getGetResults();
         List<BaseVector> queryEmbedding = new ArrayList<>();
         for (QueryResp.QueryResult queryResult : queryResults) {
-            queryEmbedding.add((FloatVec) queryResult.getEntity().get("rec_embeddings"));
+            List<Float> embList = (List<Float>) queryResult.getEntity().get("rec_embeddings");
+            queryEmbedding.add(new FloatVec(embList));
+        }
+        if (queryEmbedding.isEmpty()) {
+            return Collections.emptySet();
         }
 
         SearchReq searchReq = SearchReq.builder()

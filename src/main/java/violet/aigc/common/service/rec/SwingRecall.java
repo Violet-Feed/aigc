@@ -19,14 +19,14 @@ public class SwingRecall {
         List<String> queries = new ArrayList<>();
         for (Long triggerId : triggerIds) {
             String subQuery = String.format(
-                    "(MATCH (source:creation)-[r:sim]->(target:creation) " +
-                            "WHERE source.creation.creation_id == '%d' " +
+                    "MATCH (source:creation)-[r:sim]->(target:creation) " +
+                            "WHERE source.creation.creation_id == %d " +
                             "RETURN " +
                             "'%d' AS triggerId, " +
                             "target.creation.creation_id AS targetId, " +
                             "r.simscore AS score " +
                             "ORDER BY score DESC " +
-                            "LIMIT %d)",
+                            "LIMIT %d",
                     triggerId, triggerId, RECALL_SIZE
             );
             queries.add(subQuery);

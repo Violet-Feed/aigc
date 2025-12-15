@@ -89,6 +89,13 @@ message MGetFollowCountResponse{
   common.BaseResp baseResp = 255;
 }
 
+enum EntityType{
+  ENTITY_TYPE_Not_Use = 0;
+  user = 1;
+  creation = 2;
+  comment = 3;
+}
+
 message DiggRequest{
   int64 user_id = 1;
   string entity_type = 2;
@@ -135,13 +142,14 @@ message CommentData{
   string content = 4;
   int32 level = 5;
   int64 parent_id = 6;
-  string parent_type = 7;
-  int64 sib_id = 8;
-  int64 sib_user_id = 9;
-  int64 create_time = 10;
-  string extra = 11;
-  int64 reply_count = 12;
-  int64 digg_count = 13;
+  string entity_type = 7;
+  int64 entity_id = 8;
+  int64 sib_id = 9;
+  int64 sib_user_id = 10;
+  int64 create_time = 11;
+  string extra = 12;
+  int64 reply_count = 13;
+  int64 digg_count = 14;
 }
 
 message CreateCommentRequest{
@@ -159,13 +167,23 @@ message CreateCommentResponse{
 message CreateCommentReplyRequest{
   int64 user_id = 1;
   int64 parent_id = 2;
-  int64 sib_id = 3;
-  int64 sib_user_id = 4;
-  int32 content_type = 5;
-  string content = 6;
+  string entity_type = 3;
+  int64 entity_id = 4;
+  int64 sib_id = 5;
+  int64 sib_user_id = 6;
+  int32 content_type = 7;
+  string content = 8;
 }
 message CreateCommentReplyResponse{
   int64 comment_id = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message GetCommentByIdRequest{
+  int64 comment_id = 1;
+}
+message GetCommentByIdResponse{
+  CommentData comment = 1;
   common.BaseResp baseResp = 255;
 }
 
@@ -173,9 +191,10 @@ message GetCommentListRequest{
   string entity_type = 1;
   int64 entity_id = 2;
   int32 page = 3;
+  string sort_type = 4;
 }
 message GetCommentListResponse{
-  repeated CommentData comment_list = 1;
+  repeated CommentData comments = 1;
   bool has_more = 2;
   common.BaseResp baseResp = 255;
 }
@@ -187,7 +206,7 @@ message GetCommentReplyListRequest{
   int32 page = 4;
 }
 message GetCommentReplyListResponse{
-  repeated CommentData comment_list = 1;
+  repeated CommentData comments = 1;
   bool has_more = 2;
   common.BaseResp baseResp = 255;
 }
@@ -201,22 +220,59 @@ message GetCommentCountResponse{
   common.BaseResp baseResp = 255;
 }
 
-enum ActionType{
-  USER_ACTION_TYPE_Not_Use = 0;
-  expo = 1;
-  click = 2;
-  digg = 3;
-  comment = 4;
-  forward = 5;
-}
-message ReportUserActionRequest{
+message DiggCommentRequest{
   int64 user_id = 1;
-  string action_type_list = 2;
-  string creation_id_list = 3;
-  string timestamp_list = 4;
+  int64 comment_id = 2;
 }
-message ReportUserActionResponse{
+message DiggCommentResponse{
   common.BaseResp baseResp = 255;
+}
+
+message ForwardRequest{
+  int64 user_id = 1;
+  string entity_type = 2;
+  int64 entity_id = 3;
+  int64 conversation_id = 4;
+}
+message ForwardResponse{
+  common.BaseResp baseResp = 255;
+}
+message ReportClickRequest{
+  int64 user_id = 1;
+  repeated int64 creation_ids = 2;
+  int64 timestamp = 3;
+}
+message ReportClickResponse{
+  common.BaseResp baseResp = 255;
+}
+
+enum ActionType {
+  ActionType_Not_Use = 0;
+  Expo = 1;
+  Click = 2;
+  Digg = 3;
+  DiggComment = 4;
+  CreateComment = 5;
+  CreateReply = 6;
+  Forward = 7;
+}
+
+message ActionEvent {
+  int64 action_id = 1;
+  int32 action_type = 2;
+  int64 user_id = 3;
+  int64 timestamp = 4;
+  string creation_list = 5;
+  ActionPayload payload = 6;
+}
+
+message ActionPayload {
+  int64 author_id = 1;
+  int64 op_comment_id = 2;
+  int64 comment_id = 3;
+  int32 content_type = 4;
+  string content = 5;
+  int64 parent_comment_id = 6;
 }
 
 service ActionService {
@@ -239,8 +295,12 @@ service ActionService {
   rpc MIsDigg(MIsDiggRequest)returns(MIsDiggResponse){}
   rpc CreateComment(CreateCommentRequest)returns(CreateCommentResponse){}
   rpc CreateCommentReply(CreateCommentReplyRequest)returns(CreateCommentReplyResponse){}
+  rpc GetCommentById(GetCommentByIdRequest)returns(GetCommentByIdResponse){}
   rpc GetCommentList(GetCommentListRequest)returns(GetCommentListResponse){}
   rpc GetCommentReplyList(GetCommentReplyListRequest)returns(GetCommentReplyListResponse){}
   rpc GetCommentCount(GetCommentCountRequest)returns(GetCommentCountResponse){}
-  rpc ReportUserAction(ReportUserActionRequest)returns(ReportUserActionResponse){}
+  rpc DiggComment(DiggCommentRequest)returns(DiggCommentResponse){}
+  rpc CancelDiggComment(DiggCommentRequest)returns(DiggCommentResponse){}
+  rpc Forward(ForwardRequest)returns(ForwardResponse){}
+  rpc ReportClick(ReportClickRequest)returns(ReportClickResponse){}
 }
