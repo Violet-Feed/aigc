@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import violet.aigc.common.proto_gen.aigc.*;
+import violet.aigc.common.service.AgentService;
 import violet.aigc.common.service.CreationService;
 import violet.aigc.common.service.MaterialService;
 
@@ -15,6 +16,8 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
     private MaterialService materialService;
     @Autowired
     private CreationService creationService;
+    @Autowired
+    private AgentService agentService;
 
     @Override
     public void createMaterial(CreateMaterialRequest request, StreamObserver<CreateMaterialResponse> responseObserver) {
@@ -155,6 +158,39 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onCompleted();
         } catch (Exception e) {
             log.error("getCreationsBySearch error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void createAgent(CreateAgentRequest request, StreamObserver<CreateAgentResponse> responseObserver) {
+        try {
+            responseObserver.onNext(agentService.createAgent(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("createAgent error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void getAgentsByIds(GetAgentsByIdsRequest request, StreamObserver<GetAgentsByIdsResponse> responseObserver) {
+        try {
+            responseObserver.onNext(agentService.getAgentsByIds(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("getAgentsByIds error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void getAgentsByUser(GetAgentsByUserRequest request, StreamObserver<GetAgentsByUserResponse> responseObserver) {
+        try {
+            responseObserver.onNext(agentService.getAgentsByUser(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("getAgentsByUser error", e);
             responseObserver.onError(e);
         }
     }

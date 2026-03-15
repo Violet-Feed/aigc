@@ -171,6 +171,48 @@ message GetCreationsBySearchResponse{
   common.BaseResp baseResp = 255;
 }
 
+message AgentInfo{
+  int64 agent_id = 1;
+  string agent_name = 2;
+  string avatar_uri = 3;
+  string description = 4;
+  string personality = 5;
+  int64 owner_id = 6;
+  int64 create_time = 7;
+  int64 modify_time = 8;
+  int32 status = 9;
+  string extra = 10;
+}
+
+message CreateAgentRequest{
+  int64 user_id = 1;
+  string agent_name = 2;
+  string avatar_uri = 3;
+  string description = 4;
+  string personality = 5;
+}
+message CreateAgentResponse{
+  int64 agent_id = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message GetAgentsByIdsRequest{
+  repeated int64 agent_ids = 1;
+}
+message GetAgentsByIdsResponse{
+  repeated AgentInfo agent_infos = 1;
+  common.BaseResp baseResp = 255;
+}
+
+message GetAgentsByUserRequest{
+  int64 user_id = 1;
+  int32 page = 2;
+}
+message GetAgentsByUserResponse{
+  repeated AgentInfo agent_infos = 1;
+  common.BaseResp baseResp = 255;
+}
+
 service AigcService {
   rpc CreateMaterial(CreateMaterialRequest)returns(CreateMaterialResponse){}
   rpc DeleteMaterial(DeleteMaterialRequest)returns(DeleteMaterialResponse){}
@@ -185,4 +227,7 @@ service AigcService {
   rpc GetCreationsByFriend(GetCreationsByFriendRequest)returns(GetCreationsByFriendResponse){}
   rpc GetCreationsByRec(GetCreationsByRecRequest)returns(GetCreationsByRecResponse){}
   rpc GetCreationsBySearch(GetCreationsBySearchRequest)returns(GetCreationsBySearchResponse){}
+  rpc CreateAgent(CreateAgentRequest)returns(CreateAgentResponse){}
+  rpc GetAgentsByIds(GetAgentsByIdsRequest)returns(GetAgentsByIdsResponse){}
+  rpc GetAgentsByUser(GetAgentsByUserRequest)returns(GetAgentsByUserResponse){}
 }
