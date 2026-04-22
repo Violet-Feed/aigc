@@ -86,6 +86,17 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
     }
 
     @Override
+    public void updateCreation(UpdateCreationRequest request, StreamObserver<UpdateCreationResponse> responseObserver) {
+        try {
+            responseObserver.onNext(creationService.updateCreation(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("updateCreation error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
     public void getCreationById(GetCreationByIdRequest request, StreamObserver<GetCreationByIdResponse> responseObserver) {
         try {
             responseObserver.onNext(creationService.getCreationById(request));
@@ -169,6 +180,28 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
             responseObserver.onCompleted();
         } catch (Exception e) {
             log.error("createAgent error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void deleteAgent(DeleteAgentRequest request, StreamObserver<DeleteAgentResponse> responseObserver) {
+        try {
+            responseObserver.onNext(agentService.deleteAgent(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("deleteAgent error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void updateAgent(UpdateAgentRequest request, StreamObserver<UpdateAgentResponse> responseObserver) {
+        try {
+            responseObserver.onNext(agentService.updateAgent(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("updateAgent error", e);
             responseObserver.onError(e);
         }
     }

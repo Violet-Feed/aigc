@@ -186,6 +186,15 @@ message MarkReadResponse{
   common.BaseResp baseResp = 255;
 }
 
+message RecallMessageRequest{
+  int64 user_id = 1;
+  int64 con_short_id = 2;
+  int64 msg_id = 3;
+}
+message RecallMessageResponse{
+  common.BaseResp baseResp = 255;
+}
+
 message CreateConversationRequest{
   string con_id = 1;
   int32 con_type = 2;
@@ -211,6 +220,16 @@ message GetConversationInfoResponse{
   common.BaseResp baseResp = 255;
 }
 
+message UpdateConversationInfoRequest{
+  int64 con_short_id = 1;
+  int64 user_id = 2;
+  string type = 3;
+  string value = 4;
+}
+message UpdateConversationInfoResponse{
+  common.BaseResp baseResp = 255;
+}
+
 message AddConversationMembersRequest{
   int64 con_short_id = 1;
   string con_id = 2;
@@ -218,6 +237,16 @@ message AddConversationMembersRequest{
   int64 operator = 4;
 }
 message AddConversationMembersResponse{
+  common.BaseResp baseResp = 255;
+}
+
+message RemoveConversationMembersRequest{
+  int64 con_short_id = 1;
+  string con_id = 2;
+  repeated int64 members = 3;
+  int64 operator = 4;
+}
+message RemoveConversationMembersResponse{
   common.BaseResp baseResp = 255;
 }
 
@@ -253,6 +282,16 @@ message AddConversationAgentsRequest{
   int64 operator = 4;
 }
 message AddConversationAgentsResponse{
+  common.BaseResp baseResp = 255;
+}
+
+message RemoveConversationAgentsRequest{
+  int64 con_short_id = 1;
+  string con_id = 2;
+  repeated int64 agent_ids = 3;
+  int64 operator = 4;
+}
+message RemoveConversationAgentsResponse{
   common.BaseResp baseResp = 255;
 }
 
@@ -353,12 +392,16 @@ service IMService{
   rpc GetCommandByUser(GetCommandByUserRequest)returns(GetCommandByUserResponse);
   rpc GetMessageByConversation(GetMessageByConversationRequest)returns(GetMessageByConversationResponse);
   rpc MarkRead(MarkReadRequest)returns(MarkReadResponse);
+  rpc RecallMessage(RecallMessageRequest)returns(RecallMessageResponse);
   rpc CreateConversation(CreateConversationRequest)returns(CreateConversationResponse);
   rpc GetConversationInfo(GetConversationInfoRequest)returns(GetConversationInfoResponse);
+  rpc UpdateConversationInfo(UpdateConversationInfoRequest)returns(UpdateConversationInfoResponse);
   rpc AddConversationMembers(AddConversationMembersRequest)returns(AddConversationMembersResponse);
+  rpc RemoveConversationMembers(RemoveConversationMembersRequest)returns(RemoveConversationMembersResponse);
   rpc GetConversationMembers(GetConversationMembersRequest)returns(GetConversationMembersResponse);
   rpc GetMembersReadIndex(GetMembersReadIndexRequest)returns(GetMembersReadIndexResponse);
   rpc AddConversationAgents(AddConversationAgentsRequest)returns(AddConversationAgentsResponse);
+  rpc RemoveConversationAgents(RemoveConversationAgentsRequest)returns(RemoveConversationAgentsResponse);
   rpc GetConversationAgents(GetConversationAgentsRequest)returns(GetConversationAgentsResponse);
   rpc SendNotice(SendNoticeRequest)returns(SendNoticeResponse);
   rpc GetNoticeList(GetNoticeListRequest)returns(GetNoticeListResponse);

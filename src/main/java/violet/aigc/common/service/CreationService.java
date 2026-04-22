@@ -7,6 +7,8 @@ public interface CreationService {
 
     DeleteCreationResponse deleteCreation(DeleteCreationRequest req);
 
+    UpdateCreationResponse updateCreation(UpdateCreationRequest req);
+
     GetCreationByIdResponse getCreationById(GetCreationByIdRequest req);
 
     GetCreationByIdsResponse getCreationByIds(GetCreationByIdsRequest req);

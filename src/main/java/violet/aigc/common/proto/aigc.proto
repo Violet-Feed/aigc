@@ -110,6 +110,17 @@ message DeleteCreationResponse{
   common.BaseResp baseResp = 255;
 }
 
+message UpdateCreationRequest{
+  int64 creation_id = 1;
+  int64 user_id = 2;
+  string title = 3;
+  string content = 4;
+  string category = 5;
+}
+message UpdateCreationResponse{
+  common.BaseResp baseResp = 255;
+}
+
 message GetCreationByIdRequest{
   int64 creation_id = 1;
 }
@@ -196,6 +207,26 @@ message CreateAgentResponse{
   common.BaseResp baseResp = 255;
 }
 
+message DeleteAgentRequest{
+  int64 agent_id = 1;
+  int64 user_id = 2;
+}
+message DeleteAgentResponse{
+  common.BaseResp baseResp = 255;
+}
+
+message UpdateAgentRequest{
+  int64 agent_id = 1;
+  int64 user_id = 2;
+  string agent_name = 3;
+  string avatar_uri = 4;
+  string description = 5;
+  string personality = 6;
+}
+message UpdateAgentResponse{
+  common.BaseResp baseResp = 255;
+}
+
 message GetAgentsByIdsRequest{
   repeated int64 agent_ids = 1;
 }
@@ -220,6 +251,7 @@ service AigcService {
   rpc GetMaterialByUser(GetMaterialByUserRequest)returns(GetMaterialByUserResponse){}
   rpc CreateCreation(CreateCreationRequest)returns(CreateCreationResponse){}
   rpc DeleteCreation(DeleteCreationRequest)returns(DeleteCreationResponse){}
+  rpc UpdateCreation(UpdateCreationRequest)returns(UpdateCreationResponse){}
   rpc GetCreationById(GetCreationByIdRequest)returns(GetCreationByIdResponse){}
   rpc GetCreationByIds(GetCreationByIdsRequest)returns(GetCreationByIdsResponse){}
   rpc GetCreationsByUser(GetCreationsByUserRequest)returns(GetCreationsByUserResponse){}
@@ -228,6 +260,8 @@ service AigcService {
   rpc GetCreationsByRec(GetCreationsByRecRequest)returns(GetCreationsByRecResponse){}
   rpc GetCreationsBySearch(GetCreationsBySearchRequest)returns(GetCreationsBySearchResponse){}
   rpc CreateAgent(CreateAgentRequest)returns(CreateAgentResponse){}
+  rpc DeleteAgent(DeleteAgentRequest)returns(DeleteAgentResponse){}
+  rpc UpdateAgent(UpdateAgentRequest)returns(UpdateAgentResponse){}
   rpc GetAgentsByIds(GetAgentsByIdsRequest)returns(GetAgentsByIdsResponse){}
   rpc GetAgentsByUser(GetAgentsByUserRequest)returns(GetAgentsByUserResponse){}
 }

@@ -11,6 +11,7 @@ import violet.aigc.common.proto_gen.common.StatusCode;
 import violet.aigc.common.service.AgentService;
 import violet.aigc.common.utils.SnowFlake;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,6 +37,54 @@ public class AgentServiceImpl implements AgentService {
         }
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).setAgentId(agentId).build();
+    }
+
+    @Override
+    public DeleteAgentResponse deleteAgent(DeleteAgentRequest req) {
+        DeleteAgentResponse.Builder resp = DeleteAgentResponse.newBuilder();
+        List<Agent> agents = agentMapper.selectAgentsByIds(Collections.singletonList(req.getAgentId()));
+        if (agents == null || agents.isEmpty()) {
+            log.error("[deleteAgent] agent not found, agentId = {}", req.getAgentId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        Agent agent = agents.get(0);
+        if (agent.getOwnerId() != req.getUserId()) {
+            log.error("[deleteAgent] permission denied, agentId = {}, userId = {}", req.getAgentId(), req.getUserId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Auth_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        if(!agentMapper.deleteAgent(req.getAgentId())){
+            log.error("[deleteAgent] deleteAgent err, agentId = {}", req.getAgentId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+        return resp.setBaseResp(baseResp).build();
+    }
+
+    @Override
+    public UpdateAgentResponse updateAgent(UpdateAgentRequest req) {
+        UpdateAgentResponse.Builder resp = UpdateAgentResponse.newBuilder();
+        List<Agent> agents = agentMapper.selectAgentsByIds(Collections.singletonList(req.getAgentId()));
+        if (agents == null || agents.isEmpty()) {
+            log.error("[updateAgent] agent not found, agentId = {}", req.getAgentId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        Agent agent = agents.get(0);
+        if (agent.getOwnerId() != req.getUserId()) {
+            log.error("[updateAgent] permission denied, agentId = {}, userId = {}", req.getAgentId(), req.getUserId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Auth_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        if(!agentMapper.updateAgent(req.getAgentId(), req.getAgentName(), req.getAvatarUri(), req.getDescription(), req.getPersonality(), new Date())){
+            log.error("[updateAgent] updateAgent err, agentId = {}", req.getAgentId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+        return resp.setBaseResp(baseResp).build();
     }
 
     @Override

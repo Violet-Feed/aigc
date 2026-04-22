@@ -103,7 +103,7 @@ public class CreationServiceImpl implements CreationService {
         Date now = new Date();
         Creation creation = new Creation(null, creationId, req.getUserId(), coverUrl, req.getMaterialId(), req.getMaterialType(), req.getMaterialUrl(), req.getTitle(), req.getContent(), req.getCategory(), now, now, 0, "");
         if (!creationMapper.insertCreation(creation)) {
-            log.error("作品入库失败，作品ID：{}", creationId);
+            log.error("[createCreation] creation insert err, creationId = {}", creationId);
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
             return resp.setBaseResp(baseResp).build();
         }
@@ -115,7 +115,31 @@ public class CreationServiceImpl implements CreationService {
     public DeleteCreationResponse deleteCreation(DeleteCreationRequest req) {
         DeleteCreationResponse.Builder resp = DeleteCreationResponse.newBuilder();
         if (!creationMapper.deleteCreation(req.getCreationId())) {
-            log.error("作品删除失败，作品ID：{}", req.getCreationId());
+            log.error("[deleteCreation] creation delete err, creationId = {}", req.getCreationId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+        return resp.setBaseResp(baseResp).build();
+    }
+
+    @Override
+    public UpdateCreationResponse updateCreation(UpdateCreationRequest req) {
+        UpdateCreationResponse.Builder resp = UpdateCreationResponse.newBuilder();
+        Creation creation = creationMapper.selectByCreationId(req.getCreationId());
+        if (creation == null) {
+            log.error("[updateCreation] creation not found, creationId = {}", req.getCreationId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        if (creation.getUserId() != req.getUserId()) {
+            log.error("[updateCreation] auth error, userId = {}, creationId = {}", req.getUserId(), req.getCreationId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Auth_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        Date now = new Date();
+        if (!creationMapper.updateCreation(req.getCreationId(), req.getTitle(), req.getContent(), req.getCategory(), now)) {
+            log.error("[updateCreation] update creation err, creationId = {}", req.getCreationId());
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
             return resp.setBaseResp(baseResp).build();
         }
@@ -128,7 +152,7 @@ public class CreationServiceImpl implements CreationService {
         GetCreationByIdResponse.Builder resp = GetCreationByIdResponse.newBuilder();
         Creation creation = creationMapper.selectByCreationId(req.getCreationId());
         if (creation == null) {
-            log.error("作品不存在，作品ID：{}", req.getCreationId());
+            log.error("[getCreationById] creation not found, creationId = {}", req.getCreationId());
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).build();
             return resp.setBaseResp(baseResp).build();
         }
@@ -154,7 +178,7 @@ public class CreationServiceImpl implements CreationService {
             return resp.setBaseResp(baseResp).build();
         }
         List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
-        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
     }
@@ -179,7 +203,7 @@ public class CreationServiceImpl implements CreationService {
             return resp.setBaseResp(baseResp).build();
         }
         List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
-        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
     }
@@ -193,7 +217,7 @@ public class CreationServiceImpl implements CreationService {
             return resp.setBaseResp(baseResp).build();
         }
         List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
-        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
     }
@@ -234,7 +258,7 @@ public class CreationServiceImpl implements CreationService {
             List<Long> rankedResults = randomRanker.rank(beforeRankResults);
 
             List<Creation> creations = creationMapper.selectByCreationIds(rankedResults);
-            List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().map(Creation::toProto).collect(Collectors.toList());
+            List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
 
             String expoKey = "expo:" + userId + ":" + TimeUtil.getNowDate();
             String expoValue = rankedResults.stream().map(String::valueOf).collect(Collectors.joining(","));
@@ -314,7 +338,7 @@ public class CreationServiceImpl implements CreationService {
         log.info("[getCreationsBySearch] keyword={}, totalIds={}, offset={}, toIndex={}, pageIds={}", req.getKeyword(), creationIds.size(), offset, toIndex, pageIds);
         List<Creation> creations = creationMapper.selectByCreationIds(pageIds);
         Map<Long, Creation> creationMap = creations.stream().collect(Collectors.toMap(Creation::getCreationId, Function.identity()));
-        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = pageIds.stream().map(creationMap::get).filter(Objects::nonNull).map(Creation::toProto).collect(Collectors.toList());
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = pageIds.stream().map(creationMap::get).filter(Objects::nonNull).filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
         boolean hasMore = toIndex < creationIds.size();
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
