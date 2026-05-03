@@ -163,6 +163,10 @@ public class CreationServiceImpl implements CreationService {
     @Override
     public GetCreationByIdsResponse getCreationByIds(GetCreationByIdsRequest req) {
         GetCreationByIdsResponse.Builder resp = GetCreationByIdsResponse.newBuilder();
+        if (req.getCreationIdsList().isEmpty()) {
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+            return resp.setBaseResp(baseResp).putAllCreations(Collections.emptyMap()).build();
+        }
         List<Creation> creations = creationMapper.selectByCreationIds(req.getCreationIdsList());
         Map<Long, violet.aigc.common.proto_gen.aigc.Creation> creationMap = creations.stream().collect(Collectors.toMap(Creation::getCreationId, Creation::toProto));
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();

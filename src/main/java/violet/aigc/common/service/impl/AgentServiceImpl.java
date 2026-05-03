@@ -90,6 +90,10 @@ public class AgentServiceImpl implements AgentService {
     @Override
     public GetAgentsByIdsResponse getAgentsByIds(GetAgentsByIdsRequest req) {
         GetAgentsByIdsResponse.Builder resp = GetAgentsByIdsResponse.newBuilder();
+        if (req.getAgentIdsList().isEmpty()) {
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+            return resp.setBaseResp(baseResp).addAllAgentInfos(Collections.emptyList()).build();
+        }
         List<Agent> agents = agentMapper.selectAgentsByIds(req.getAgentIdsList());
         List<AgentInfo> agentInfos = agents.stream().map(Agent::toProto).collect(Collectors.toList());
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();

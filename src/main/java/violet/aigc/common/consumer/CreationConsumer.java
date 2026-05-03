@@ -6,8 +6,8 @@ import com.alibaba.fastjson2.JSONReader;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import io.milvus.v2.client.MilvusClientV2;
-import io.milvus.v2.service.vector.request.InsertReq;
-import io.milvus.v2.service.vector.response.InsertResp;
+import io.milvus.v2.service.vector.request.UpsertReq;
+import io.milvus.v2.service.vector.response.UpsertResp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,16 +34,17 @@ public class CreationConsumer {
         JSONObject json = JSON.parseObject(record.value());
         Creation creation = JSON.parseObject(json.getString("payload"), Creation.class, JSONReader.Feature.SupportSmartMatch);
         List<Float> titleEmbedding = QwenUtil.getTextEmbedding(creation.getTitle());
-        List<JsonObject> data = Collections.singletonList(new Gson().fromJson(String.format(
-                "{\"creation_id\": %d, \"rec_embeddings\": %s, \"title\": %s}",
-                creation.getCreationId(), titleEmbedding.toString(), creation.getTitle()
-        ), JsonObject.class));
-        InsertReq insertReq = InsertReq.builder()
+        JSONObject row = new JSONObject();
+        row.put("creation_id", creation.getCreationId());
+        row.put("rec_embeddings", titleEmbedding);
+        row.put("title", creation.getTitle());
+        List<JsonObject> data = Collections.singletonList(new Gson().fromJson(row.toJSONString(), JsonObject.class));
+        UpsertReq upsertReq = UpsertReq.builder()
                 .collectionName("creation")
                 .data(data)
                 .build();
-        InsertResp insertResp = milvusClient.insert(insertReq);
-        log.info("Inserted creation_id {} into Milvus with cnt: {}", creation.getCreationId(), insertResp.getInsertCnt());
+        UpsertResp upsertResp = milvusClient.upsert(upsertReq);
+        log.info("Upserted creation_id {} into Milvus with cnt: {}", creation.getCreationId(), upsertResp.getUpsertCnt());
 
         //按理应该放在另一个消费者组
         creationGraphMapper.createCreation(creation.getUserId(), creation.getCreationId());
