@@ -124,7 +124,7 @@ public class MaterialServiceImpl implements MaterialService {
         } else if (req.getMaterialType() == MaterialType.Video_VALUE) {
             requestJson.put("duration", 6);
             requestJson.put("resolution", "768P");
-            requestJson.put("callback_url", "/api/aigc/video_material_callback");
+            requestJson.put("callback_url", "http://8.130.134.60:3000/api/aigc/video_material_callback");
             if (!req.getSourceUrl().isEmpty()) {
                 requestJson.put("resolution", "512P");
                 requestJson.put("first_frame_image", req.getSourceUrl());

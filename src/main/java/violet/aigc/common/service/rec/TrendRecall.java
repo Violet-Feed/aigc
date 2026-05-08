@@ -21,7 +21,7 @@ public class TrendRecall {
     @Autowired
     private CreationMapper creationMapper;
 
-    private static final int RECALL_SIZE = 10;
+    private static final int RECALL_SIZE = 100;
 
     public Set<Long> recall(Set<Long> triggerIds) {
         List<String> keys = new ArrayList<>();
