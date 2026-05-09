@@ -135,7 +135,6 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>violet.aigc.common.AigcApplication</mainClass>
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>
