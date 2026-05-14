@@ -22,6 +22,8 @@ public class Material {
     private String model;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date createTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
+    private Date modifyTime;
     private Integer status;
     private String extra;
 
@@ -36,6 +38,7 @@ public class Material {
                 .setCoverUrl(this.coverUrl)
                 .setModel(this.model)
                 .setCreateTime(this.createTime.getTime())
+                .setModifyTime(this.modifyTime.getTime())
                 .setStatus(this.status)
                 .setExtra(this.extra == null ? "" : this.extra)
                 .build();

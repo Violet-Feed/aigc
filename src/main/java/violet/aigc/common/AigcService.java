@@ -31,6 +31,17 @@ public class AigcService extends AigcServiceGrpc.AigcServiceImplBase {
     }
 
     @Override
+    public void reCreateMaterial(ReCreateMaterialRequest request, StreamObserver<ReCreateMaterialResponse> responseObserver) {
+        try {
+            responseObserver.onNext(materialService.reCreateMaterial(request));
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("reCreateMaterial error", e);
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
     public void videoMaterialCallback(VideoMaterialCallbackRequest request, StreamObserver<VideoMaterialCallbackResponse> responseObserver) {
         try {
             responseObserver.onNext(materialService.videoMaterialCallback(request));

@@ -262,7 +262,8 @@ public class CreationServiceImpl implements CreationService {
             List<Long> rankedResults = randomRanker.rank(beforeRankResults);
 
             List<Creation> creations = creationMapper.selectByCreationIds(rankedResults);
-            List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
+            Map<Long, Creation> creationMap = creations.stream().filter(creation -> creation.getStatus() == 0).collect(Collectors.toMap(Creation::getCreationId, Function.identity()));
+            List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = rankedResults.stream().map(creationMap::get).filter(Objects::nonNull).map(Creation::toProto).collect(Collectors.toList());
 
             String expoKey = "expo:" + userId + ":" + TimeUtil.getNowDate();
             String expoValue = rankedResults.stream().map(String::valueOf).collect(Collectors.joining(","));

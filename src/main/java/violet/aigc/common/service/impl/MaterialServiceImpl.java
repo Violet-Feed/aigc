@@ -41,7 +41,6 @@ public class MaterialServiceImpl implements MaterialService {
     private String apiKey;
     private WebClient webClient;
     private final SnowFlake materialIdGenerator = new SnowFlake(0, 0);
-    private final String SOURCE_OSS_PATH = "material/source/%d.png";
     private final String IMAGE_OSS_PATH = "material/image/%d.png";
     private final String VIDEO_OSS_PATH = "material/video/%d.mp4";
     private final String COVER_OSS_PATH = "material/cover/%d.png";
@@ -55,29 +54,19 @@ public class MaterialServiceImpl implements MaterialService {
                 .build();
     }
 
-    @Override
-    public CreateMaterialResponse createMaterial(CreateMaterialRequest req) {
-        CreateMaterialResponse.Builder resp = CreateMaterialResponse.newBuilder();
-        Long materialId = materialIdGenerator.nextId();
-        String model = req.getMaterialType() == MaterialType.Image_VALUE ? "image-01" : "MiniMax-Hailuo-02";
-        Material material = new Material(null, materialId, req.getMaterialType(), req.getUserId(), req.getPrompt(), req.getSourceUrl(), "", req.getSourceUrl(), model, new Date(), MaterialStatus.Generating_VALUE, "");
-        if (!materialMapper.insertMaterial(material)) {
-            log.error("素材入库失败，素材ID：{}", materialId);
-            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
-            return resp.setBaseResp(baseResp).build();
-        }
+    private  void doCreateMaterial(Material material) {
         JSONObject requestJson = new JSONObject();
-        requestJson.put("model", model);
-        requestJson.put("prompt", req.getPrompt());
+        requestJson.put("model", material.getModel());
+        requestJson.put("prompt", material.getPrompt());
         requestJson.put("prompt_optimizer", true);
-        if (req.getMaterialType() == MaterialType.Image_VALUE) {
+        if (material.getMaterialType() == MaterialType.Image_VALUE) {
             requestJson.put("response_format", "url");
             requestJson.put("n", 1);
-            if (!req.getSourceUrl().isEmpty()) {
+            if (!material.getSourceUrl().isEmpty()) {
                 JSONArray subjectReference = new JSONArray();
                 JSONObject referenceObj = new JSONObject();
                 referenceObj.put("type", "character");
-                referenceObj.put("image_file", req.getSourceUrl());
+                referenceObj.put("image_file", material.getSourceUrl());
                 subjectReference.add(referenceObj);
                 requestJson.put("subject_reference", subjectReference);
             }
@@ -88,7 +77,7 @@ public class MaterialServiceImpl implements MaterialService {
                     .bodyToMono(String.class)
                     .doOnNext(jsonStr -> {
                         try {
-                            log.info("图片生成接口响应，素材ID：{}，响应内容：{}", materialId, jsonStr);
+                            log.info("图片生成接口响应，素材ID：{}，响应内容：{}", material.getMaterialId(), jsonStr);
                             JSONObject responseJson = JSONObject.parseObject(jsonStr);
                             JSONObject baseResp = responseJson.getJSONObject("base_resp");
                             if (baseResp == null || baseResp.getInteger("status_code") != 0) {
@@ -104,30 +93,30 @@ public class MaterialServiceImpl implements MaterialService {
                                 throw new RuntimeException("无图片 URL 返回");
                             }
                             String tempImageUrl = imageUrls.get(0);
-                            String ossPath = String.format(IMAGE_OSS_PATH, materialId);
+                            String ossPath = String.format(IMAGE_OSS_PATH, material.getMaterialId());
                             String ossAccessUrl = OSSUtil.upload(tempImageUrl, ossPath);
-                            log.info("素材创建成功，素材ID：{}，OSS访问URL：{}", materialId, ossAccessUrl);
+                            log.info("素材创建成功，素材ID：{}，OSS访问URL：{}", material.getMaterialId(), ossAccessUrl);
                             material.setMaterialUrl(ossAccessUrl);
                             material.setCoverUrl(ossAccessUrl);
                             material.setStatus(MaterialStatus.Succeeded_VALUE);
                         } catch (Exception e) {
-                            log.error("素材处理失败，素材ID：{}", materialId, e);
+                            log.error("素材处理失败，素材ID：{}", material.getMaterialId(), e);
                             material.setStatus(MaterialStatus.Failed_VALUE);
                         } finally {
                             updateAndPushMaterial(material);
                         }
                     })
                     .doOnError(ex -> {
-                        log.error("图片生成接口调用异常，素材ID：{}", materialId, ex);
+                        log.error("图片生成接口调用异常，素材ID：{}", material.getMaterialId(), ex);
                     })
                     .subscribe();
-        } else if (req.getMaterialType() == MaterialType.Video_VALUE) {
+        } else if (material.getMaterialType() == MaterialType.Video_VALUE) {
             requestJson.put("duration", 6);
             requestJson.put("resolution", "768P");
             requestJson.put("callback_url", "http://8.130.134.60:3000/api/aigc/video_material_callback");
-            if (!req.getSourceUrl().isEmpty()) {
+            if (!material.getSourceUrl().isEmpty()) {
                 requestJson.put("resolution", "512P");
-                requestJson.put("first_frame_image", req.getSourceUrl());
+                requestJson.put("first_frame_image", material.getSourceUrl());
             }
             webClient.post()
                     .uri("https://api.minimaxi.com/v1/video_generation")
@@ -136,7 +125,7 @@ public class MaterialServiceImpl implements MaterialService {
                     .bodyToMono(String.class)
                     .doOnNext(jsonStr -> {
                         try {
-                            log.info("视频生成接口响应，素材ID：{}，响应内容：{}", materialId, jsonStr);
+                            log.info("视频生成接口响应，素材ID：{}，响应内容：{}", material.getMaterialId(), jsonStr);
                             JSONObject responseJson = JSONObject.parseObject(jsonStr);
                             JSONObject baseResp = responseJson.getJSONObject("base_resp");
                             if (baseResp == null || baseResp.getInteger("status_code") != 0) {
@@ -147,20 +136,64 @@ public class MaterialServiceImpl implements MaterialService {
                             if (taskId == null) {
                                 throw new RuntimeException("响应无 task_id 字段");
                             }
-                            redisTemplate.opsForValue().set("video_task:" + taskId, materialId.toString());
+                            redisTemplate.opsForValue().set("video_task:" + taskId, material.getMaterialId().toString());
                         } catch (Exception e) {
-                            log.error("视频素材处理失败，素材ID：{}", materialId, e);
+                            log.error("视频素材处理失败，素材ID：{}", material.getMaterialId(), e);
                             material.setStatus(MaterialStatus.Failed_VALUE);
                             updateAndPushMaterial(material);
                         }
                     })
                     .doOnError(ex -> {
-                        log.error("视频生成接口调用异常，素材ID：{}", materialId, ex);
+                        log.error("视频生成接口调用异常，素材ID：{}", material.getMaterialId(), ex);
                     })
                     .subscribe();
         }
+    }
+
+    @Override
+    public CreateMaterialResponse createMaterial(CreateMaterialRequest req) {
+        CreateMaterialResponse.Builder resp = CreateMaterialResponse.newBuilder();
+        Long materialId = materialIdGenerator.nextId();
+        String model = req.getMaterialType() == MaterialType.Image_VALUE ? "image-01" : "MiniMax-Hailuo-02";
+        Date now = new Date();
+        Material material = new Material(null, materialId, req.getMaterialType(), req.getUserId(), req.getPrompt(), req.getSourceUrl(), "", req.getSourceUrl(), model, now, now, MaterialStatus.Generating_VALUE, "");
+        if (!materialMapper.insertMaterial(material)) {
+            log.error("素材入库失败，素材ID：{}", materialId);
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        doCreateMaterial(material);
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).setMaterialId(materialId).build();
+    }
+
+    @Override
+    public ReCreateMaterialResponse reCreateMaterial(ReCreateMaterialRequest req) {
+        ReCreateMaterialResponse.Builder resp = ReCreateMaterialResponse.newBuilder();
+        Material material = materialMapper.selectByMaterialId(req.getMaterialId());
+        if (material == null) {
+            log.error("未找到对应的素材记录，素材ID：{}", req.getMaterialId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).setStatusMessage("未找到对应的素材记录").build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        if (req.getUserId() != material.getUserId()) {
+            log.error("非素材拥有者，素材ID：{}", req.getMaterialId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Auth_Error).setStatusMessage("非素材拥有者").build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        Date now = new Date();
+        material.setMaterialUrl("");
+        material.setCoverUrl(material.getSourceUrl());
+        material.setModifyTime(now);
+        material.setStatus(MaterialStatus.Generating_VALUE);
+        if (!materialMapper.updateMaterialAfterUpload(material)) {
+            log.error("素材状态更新失败，素材ID：{}", material.getMaterialId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();
+            return resp.setBaseResp(baseResp).build();
+        }
+        doCreateMaterial(material);
+        BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+        return resp.setBaseResp(baseResp).build();
     }
 
     @Override
@@ -256,6 +289,8 @@ public class MaterialServiceImpl implements MaterialService {
     }
 
     private void updateAndPushMaterial(Material material) {
+        Date now = new Date();
+        material.setModifyTime(now);
         if (!materialMapper.updateMaterialAfterUpload(material)) {
             log.error("素材状态更新失败，素材ID：{}", material.getMaterialId());
             material.setStatus(MaterialStatus.Failed_VALUE);
