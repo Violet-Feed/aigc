@@ -231,7 +231,8 @@ public class MaterialServiceImpl implements MaterialService {
                 String errMsg = httpBaseResp != null ? httpBaseResp.getString("status_msg") : "未知错误";
                 throw new RuntimeException("视频下载失败：" + errMsg);
             }
-            String downloadUrl = responseJson.getString("download_url");
+            JSONObject fileJson = responseJson.getJSONObject("file");
+            String downloadUrl = fileJson.getString("download_url");
             if (downloadUrl == null || downloadUrl.isEmpty()) {
                 throw new RuntimeException("响应格式异常：无有效 download_url");
             }

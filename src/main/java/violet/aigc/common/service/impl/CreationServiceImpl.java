@@ -179,7 +179,7 @@ public class CreationServiceImpl implements CreationService {
         List<Long> creationIds = creationGraphMapper.getCreationIdsByUser(req.getUserId(), req.getPage());
         if (creationIds.isEmpty()) {
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
-            return resp.setBaseResp(baseResp).build();
+            return resp.setBaseResp(baseResp).addAllCreations(Collections.emptyList()).build();
         }
         List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
         List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
@@ -204,7 +204,7 @@ public class CreationServiceImpl implements CreationService {
         List<Long> creationIds = getDiggListByUserResponse.getEntityIdsList();
         if (creationIds.isEmpty()) {
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
-            return resp.setBaseResp(baseResp).build();
+            return resp.setBaseResp(baseResp).addAllCreations(Collections.emptyList()).build();
         }
         List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
         List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
@@ -218,7 +218,7 @@ public class CreationServiceImpl implements CreationService {
         List<Long> creationIds = creationGraphMapper.getCreationIdsByFriend(req.getUserId(), req.getPage());
         if (creationIds.isEmpty()) {
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
-            return resp.setBaseResp(baseResp).build();
+            return resp.setBaseResp(baseResp).addAllCreations(Collections.emptyList()).build();
         }
         List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
         List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
@@ -260,7 +260,15 @@ public class CreationServiceImpl implements CreationService {
             allRecallResults.addAll(trendResults);
             Set<Long> beforeRankResults = beforeRanker.execute(allRecallResults, filterIds, backupIds);
             List<Long> rankedResults = randomRanker.rank(beforeRankResults);
-
+            log.info("[getCreationsByRec] userId={}, triggerIds={}, filterIds={}, " +
+                            "swingResults={}, embeddingResults={}, trendResults={}, " +
+                            "backupIds={}, recallIds={}, beforeRankIds={}, finalIds={}",
+                    userId, triggerIds, filterIds, swingResults, embeddingResults, trendResults, backupIds, allRecallResults, beforeRankResults, rankedResults
+            );
+            if (rankedResults.isEmpty()) {
+                BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+                return resp.setBaseResp(baseResp).addAllCreations(Collections.emptyList()).build();
+            }
             List<Creation> creations = creationMapper.selectByCreationIds(rankedResults);
             Map<Long, Creation> creationMap = creations.stream().filter(creation -> creation.getStatus() == 0).collect(Collectors.toMap(Creation::getCreationId, Function.identity()));
             List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = rankedResults.stream().map(creationMap::get).filter(Objects::nonNull).map(Creation::toProto).collect(Collectors.toList());
@@ -269,11 +277,6 @@ public class CreationServiceImpl implements CreationService {
             String expoValue = rankedResults.stream().map(String::valueOf).collect(Collectors.joining(","));
             redisTemplate.opsForList().rightPush(expoKey, expoValue);
 
-            log.info("[getCreationsByRec] userId={}, triggerIds={}, filterIds={}, " +
-                            "swingResults={}, embeddingResults={}, trendResults={}, " +
-                            "backupIds={}, recallIds={}, beforeRankIds={}, finalIds={}",
-                    userId, triggerIds, filterIds, swingResults, embeddingResults, trendResults, backupIds, allRecallResults, beforeRankResults, rankedResults
-            );
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
             return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
         } catch (InterruptedException e) {
@@ -341,6 +344,10 @@ public class CreationServiceImpl implements CreationService {
         int toIndex = Math.min(offset + PAGE_SIZE, creationIds.size());
         List<Long> pageIds = creationIds.subList(offset, toIndex);
         log.info("[getCreationsBySearch] keyword={}, totalIds={}, offset={}, toIndex={}, pageIds={}", req.getKeyword(), creationIds.size(), offset, toIndex, pageIds);
+        if (pageIds.isEmpty()) {
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
+            return resp.setBaseResp(baseResp).addAllCreations(Collections.emptyList()).build();
+        }
         List<Creation> creations = creationMapper.selectByCreationIds(pageIds);
         Map<Long, Creation> creationMap = creations.stream().collect(Collectors.toMap(Creation::getCreationId, Function.identity()));
         List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = pageIds.stream().map(creationMap::get).filter(Objects::nonNull).filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
