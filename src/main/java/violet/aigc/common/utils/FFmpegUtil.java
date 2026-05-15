@@ -23,12 +23,28 @@ public class FFmpegUtil {
                 "pipe:1"             // 输出到 stdout
         );
 
-        // 合并 stderr，方便排错（否则容易因为 stderr 堆积阻塞）
-        pb.redirectErrorStream(true);
+        // 不要合并 stderr 到 stdout，否则可能污染 PNG 字节流
+        pb.redirectErrorStream(false);
 
         Process process = pb.start();
+
         try (InputStream is = process.getInputStream();
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+             InputStream es = process.getErrorStream();
+             ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ByteArrayOutputStream errBaos = new ByteArrayOutputStream()) {
+
+            Thread errThread = new Thread(() -> {
+                try {
+                    byte[] errBuffer = new byte[8192];
+                    int errLen;
+                    while ((errLen = es.read(errBuffer)) != -1) {
+                        errBaos.write(errBuffer, 0, errLen);
+                    }
+                } catch (IOException ignored) {
+                }
+            });
+
+            errThread.start();
 
             byte[] buffer = new byte[8192];
             int len;
@@ -37,8 +53,12 @@ public class FFmpegUtil {
             }
 
             int exitCode = process.waitFor();
+            errThread.join();
+
+            String errMsg = errBaos.toString("UTF-8");
+
             if (exitCode != 0) {
-                throw new IOException("ffmpeg exit code = " + exitCode);
+                throw new IOException("ffmpeg exit code = " + exitCode + ", stderr = " + errMsg);
             }
 
             return baos.toByteArray();
