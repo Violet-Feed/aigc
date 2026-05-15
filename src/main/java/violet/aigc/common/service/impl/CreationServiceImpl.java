@@ -17,7 +17,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import violet.aigc.common.mapper.CreationGraphMapper;
 import violet.aigc.common.mapper.CreationMapper;
+import violet.aigc.common.mapper.MaterialMapper;
 import violet.aigc.common.pojo.Creation;
+import violet.aigc.common.pojo.Material;
 import violet.aigc.common.proto_gen.action.ActionServiceGrpc;
 import violet.aigc.common.proto_gen.action.GetDiggListByUserRequest;
 import violet.aigc.common.proto_gen.action.GetDiggListByUserResponse;
@@ -47,6 +49,8 @@ public class CreationServiceImpl implements CreationService {
     private CreationMapper creationMapper;
     @Autowired
     private CreationGraphMapper creationGraphMapper;
+    @Autowired
+    private MaterialMapper materialMapper;
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
@@ -95,13 +99,14 @@ public class CreationServiceImpl implements CreationService {
     public CreateCreationResponse createCreation(CreateCreationRequest req) {
         CreateCreationResponse.Builder resp = CreateCreationResponse.newBuilder();
         Long creationId = creationIdGenerator.nextId();
-        String coverUrl = "";
-        if (req.getMaterialType() == MaterialType.Image_VALUE) {
-            coverUrl = req.getMaterialUrl();
+        Material material = materialMapper.selectByMaterialId(req.getMaterialId());
+        if (material == null || material.getStatus() != MaterialStatus.Succeeded_VALUE) {
+            log.error("[createCreation] material not found, materialId = {}", req.getMaterialId());
+            BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Not_Found_Error).build();
+            return resp.setBaseResp(baseResp).build();
         }
-        //todo:获取首帧
         Date now = new Date();
-        Creation creation = new Creation(null, creationId, req.getUserId(), coverUrl, req.getMaterialId(), req.getMaterialType(), req.getMaterialUrl(), req.getTitle(), req.getContent(), req.getCategory(), now, now, 0, "");
+        Creation creation = new Creation(null, creationId, req.getUserId(), material.getCoverUrl(), req.getMaterialId(), material.getMaterialType(), material.getMaterialUrl(), req.getTitle(), req.getContent(), req.getCategory(), now, now, 0, "");
         if (!creationMapper.insertCreation(creation)) {
             log.error("[createCreation] creation insert err, creationId = {}", creationId);
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).build();

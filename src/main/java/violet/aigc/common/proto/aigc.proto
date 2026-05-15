@@ -100,12 +100,10 @@ message GetMaterialByUserResponse{
 
 message CreateCreationRequest{
   int64 material_id = 1;
-  int32 material_type = 2;
-  string material_url = 3;
-  int64 user_id = 4;
-  string title = 5;
-  string content = 6;
-  string category = 7;
+  int64 user_id = 2;
+  string title = 3;
+  string content = 4;
+  string category = 5;
 }
 message CreateCreationResponse{
   common.BaseResp baseResp = 255;

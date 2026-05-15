@@ -228,8 +228,9 @@ public class MaterialServiceImpl implements MaterialService {
             JSONObject responseJson = JSONObject.parseObject(jsonStr);
             JSONObject httpBaseResp = responseJson.getJSONObject("base_resp");
             if (httpBaseResp == null || httpBaseResp.getInteger("status_code") != 0) {
+                int errCode = httpBaseResp != null ? httpBaseResp.getInteger("status_code") : 9999;
                 String errMsg = httpBaseResp != null ? httpBaseResp.getString("status_msg") : "未知错误";
-                throw new RuntimeException("视频下载失败：" + errMsg);
+                throw new RuntimeException("视频下载失败：" + errCode + errMsg);
             }
             JSONObject fileJson = responseJson.getJSONObject("file");
             String downloadUrl = fileJson.getString("download_url");
@@ -255,7 +256,6 @@ public class MaterialServiceImpl implements MaterialService {
                 log.error("素材封面生成失败，素材ID：{}", materialId, coverEx);
             }
             material.setStatus(MaterialStatus.Succeeded_VALUE);
-            redisTemplate.delete("video_task:" + req.getTaskId());
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
             return resp.setBaseResp(baseResp).build();
         } catch (Exception e) {
@@ -264,6 +264,7 @@ public class MaterialServiceImpl implements MaterialService {
             BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Server_Error).setStatusMessage("素材处理失败：" + e.getMessage()).build();
             return resp.setBaseResp(baseResp).build();
         } finally {
+            redisTemplate.delete("video_task:" + req.getTaskId());
             updateAndPushMaterial(material);
         }
     }
