@@ -118,6 +118,7 @@ public class MaterialServiceImpl implements MaterialService {
                 requestJson.put("resolution", "512P");
                 requestJson.put("first_frame_image", material.getSourceUrl());
             }
+log.info("request {}",requestJson.toString());
             webClient.post()
                     .uri("https://api.minimaxi.com/v1/video_generation")
                     .bodyValue(requestJson)
