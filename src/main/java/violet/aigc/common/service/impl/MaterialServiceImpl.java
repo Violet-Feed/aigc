@@ -217,6 +217,7 @@ log.info("request {}",requestJson.toString());
             if (req.getStatusCode() != 0 || "Fail".equals(req.getStatus())) {
                 throw new RuntimeException("视频生成失败，错误信息：" + req.getStatusMsg());
             }
+log.info("file {}",req.getFileId());
             String jsonStr = webClient.get()
                     .uri("https://api.minimaxi.com/v1/files/retrieve?file_id={fileId}", req.getFileId())
                     .retrieve()
