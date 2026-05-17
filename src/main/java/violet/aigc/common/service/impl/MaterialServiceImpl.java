@@ -118,7 +118,6 @@ public class MaterialServiceImpl implements MaterialService {
                 requestJson.put("resolution", "512P");
                 requestJson.put("first_frame_image", material.getSourceUrl());
             }
-log.info("request {}",requestJson.toString());
             webClient.post()
                     .uri("https://api.minimaxi.com/v1/video_generation")
                     .bodyValue(requestJson)
@@ -214,10 +213,9 @@ log.info("request {}",requestJson.toString());
             return resp.setBaseResp(baseResp).build();
         }
         try {
-            if (req.getStatusCode() != 0 || "Fail".equals(req.getStatus())) {
+            if (req.getStatusCode() != 0 || "failed".equals(req.getStatus())) {
                 throw new RuntimeException("视频生成失败，错误信息：" + req.getStatusMsg());
             }
-log.info("file {}",req.getFileId());
             String jsonStr = webClient.get()
                     .uri("https://api.minimaxi.com/v1/files/retrieve?file_id={fileId}", req.getFileId())
                     .retrieve()
