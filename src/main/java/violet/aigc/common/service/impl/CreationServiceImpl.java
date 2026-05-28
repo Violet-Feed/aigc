@@ -187,7 +187,8 @@ public class CreationServiceImpl implements CreationService {
             return resp.setBaseResp(baseResp).addAllCreations(Collections.emptyList()).build();
         }
         List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
-        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
+        Map<Long, Creation> creationMap = creations.stream().filter(creation -> creation.getStatus() == 0).collect(Collectors.toMap(Creation::getCreationId, Function.identity()));
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creationIds.stream().map(creationMap::get).filter(Objects::nonNull).map(Creation::toProto).collect(Collectors.toList());
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
     }
@@ -212,7 +213,8 @@ public class CreationServiceImpl implements CreationService {
             return resp.setBaseResp(baseResp).addAllCreations(Collections.emptyList()).build();
         }
         List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
-        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
+        Map<Long, Creation> creationMap = creations.stream().filter(creation -> creation.getStatus() == 0).collect(Collectors.toMap(Creation::getCreationId, Function.identity()));
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creationIds.stream().map(creationMap::get).filter(Objects::nonNull).map(Creation::toProto).collect(Collectors.toList());
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
     }
@@ -226,7 +228,8 @@ public class CreationServiceImpl implements CreationService {
             return resp.setBaseResp(baseResp).addAllCreations(Collections.emptyList()).build();
         }
         List<Creation> creations = creationMapper.selectByCreationIds(creationIds);
-        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creations.stream().filter(creation -> creation.getStatus() == 0).map(Creation::toProto).collect(Collectors.toList());
+        Map<Long, Creation> creationMap = creations.stream().filter(creation -> creation.getStatus() == 0).collect(Collectors.toMap(Creation::getCreationId, Function.identity()));
+        List<violet.aigc.common.proto_gen.aigc.Creation> creationDto = creationIds.stream().map(creationMap::get).filter(Objects::nonNull).map(Creation::toProto).collect(Collectors.toList());
         BaseResp baseResp = BaseResp.newBuilder().setStatusCode(StatusCode.Success).build();
         return resp.setBaseResp(baseResp).addAllCreations(creationDto).build();
     }
